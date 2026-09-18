@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}Контакты — {{ settings.app_name }}{% endblock %}
+
+{% block content %}
+<div class="booking-header">
+    <h1 class="page-title">Контакты</h1>
+</div>
+
+<div class="contact-grid">
+    <section class="contact-card">
+        <div class="contact-icon">📧</div>
+        <h3>Email</h3>
+        <p>Для вопросов по бронированиям и сотрудничеству:</p>
+        <a href="mailto:support@skyroutes.local" class="contact-link">support@skyroutes.local</a>
+    </section>
+
+    <section class="contact-card">
+        <div class="contact-icon">📞</div>
+        <h3>Телефон</h3>
+        <p>Колл-центр работает 24/7:</p>
+        <a href="tel:+78001234567" class="contact-link">8 (800) 123-45-67</a>
+        <p class="muted">Бесплатно по России</p>
+    </section>
+
+    <section class="contact-card">
+        <div class="contact-icon">💬</div>
+        <h3>Чат</h3>
+        <p>Онлайн-чат на сайте в правом нижнем углу.</p>
+        <p class="muted">Среднее время ответа: 2 минуты</p>
+    </section>
+
+    <section class="contact-card">
+        <div class="contact-icon">📍</div>
+        <h3>Офис</h3>
+        <p>Москва, ул. Авиационная, 1</p>
+        <p class="muted">Пн–Пт, 9:00–19:00 МСК</p>
+    </section>
+</div>
+
+<section class="contact-faq">
+    <h2>Частые вопросы</h2>
+
+    <details class="faq-item">
+        <summary>Как изменить данные пассажира в брони?</summary>
+        <p>Откройте бронирование на странице «Мои бронирования» по PNR-коду или
+        email. Для изменения данных пассажира обратитесь в поддержку —
+        изменения вносит только оператор.</p>
+    </details>
+
+    <details class="faq-item">
+        <summary>Как отменить бронирование?</summary>
+        <p>Перейдите на страницу бронирования и нажмите «Отменить».
+        Места вернутся в рейс автоматически. Статус изменится на <code>cancelled</code>.</p>
+    </details>
+
+    <details class="faq-item">
+        <summary>Поддерживаются ли разные классы обслуживания?</summary>
+        <p>Да: эконом (×1.0), премиум (×1.4), бизнес (×2.5), первый (×4.0).
+        Цена рассчитывается автоматически при бронировании.</p>
+    </details>
+
+    <details class="faq-item">
+        <summary>Можно ли использовать API в своём приложении?</summary>
+        <p>Да, REST API полностью открыт. Смотри документацию на <a href="/docs" target="_blank">/docs</a>.
+        Для защищённых эндпоинтов нужно получить JWT-токен через <code>/api/auth/login</code>.</p>
+    </details>
+</section>
+{% endblock %}

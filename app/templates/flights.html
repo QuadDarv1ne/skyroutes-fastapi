@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block title %}Поиск рейсов — {{ settings.app_name }}{% endblock %}
+
+{% block content %}
+<h1 class="page-title">Рейсы</h1>
+
+<form class="filter-card" method="get" action="/flights">
+    <div class="search-grid">
+        <label>
+            <span>Откуда</span>
+            <select name="origin">
+                <option value="">—</option>
+                {% for c in cities %}
+                <option value="{{ c.code }}" {% if filters.origin == c.code %}selected{% endif %}>{{ c.name }} ({{ c.code }})</option>
+                {% endfor %}
+            </select>
+        </label>
+        <label>
+            <span>Куда</span>
+            <select name="destination">
+                <option value="">—</option>
+                {% for c in cities %}
+                <option value="{{ c.code }}" {% if filters.destination == c.code %}selected{% endif %}>{{ c.name }} ({{ c.code }})</option>
+                {% endfor %}
+            </select>
+        </label>
+        <label>
+            <span>Дата с</span>
+            <input type="date" name="date_from" value="{{ filters.date_from }}">
+        </label>
+        <label>
+            <span>Дата по</span>
+            <input type="date" name="date_to" value="{{ filters.date_to }}">
+        </label>
+        <label>
+            <span>Макс. цена, {{ settings.currency_symbol }}</span>
+            <input type="number" name="max_price" min="0" step="100" value="{{ filters.max_price }}">
+        </label>
+    </div>
+    <div class="filter-actions">
+        <label class="sort-label">
+            <span>Сортировка</span>
+            <select id="sortSelect">
+                <option value="departure_at:asc">Время вылета ↑</option>
+                <option value="departure_at:desc">Время вылета ↓</option>
+                <option value="base_price:asc">Цена ↑</option>
+                <option value="base_price:desc">Цена ↓</option>
+                <option value="duration_minutes:asc">Длительность ↑</option>
+                <option value="duration_minutes:desc">Длительность ↓</option>
+            </select>
+        </label>
+        <button type="submit" class="btn btn-primary">Применить</button>
+        <a href="/flights" class="btn btn-ghost">Сбросить</a>
+    </div>
+</form>
+
+{% if flights %}
+<div class="results-meta">
+    Найдено: <b>{{ flights|length }}</b> рейсов
+</div>
+<section class="flight-list">
+    {% for f in flights %}
+    <article class="flight-card">
+        <div class="flight-route">
+            <div class="flight-point">
+                <div class="flight-time">{{ f.departure_at.strftime('%H:%M') }}</div>
+                <div class="flight-code">{{ f.origin_city.code }}</div>
+                <div class="flight-city">{{ f.origin_city.name }}</div>
+            </div>
+            <div class="flight-arrow">
+                <div class="flight-duration">{{ (f.duration_minutes // 60) }}ч {{ (f.duration_minutes % 60) }}м</div>
+                <div class="flight-line"></div>
+                <div class="flight-airline">{{ f.airline }} · {{ f.aircraft }}</div>
+            </div>
+            <div class="flight-point">
+                <div class="flight-time">{{ f.arrival_at.strftime('%H:%M') }}</div>
+                <div class="flight-code">{{ f.destination_city.code }}</div>
+                <div class="flight-city">{{ f.destination_city.name }}</div>
+            </div>
+        </div>
+        <div class="flight-meta">
+            <div class="flight-date">{{ f.departure_at.strftime('%d.%m.%Y') }}</div>
+            <div class="flight-seats">Свободно мест: <b>{{ f.seats_available }}</b></div>
+            <div class="flight-price">{{ '%.0f'|format(f.base_price) }} {{ settings.currency_symbol }}</div>
+            <div class="flight-actions">
+                <a href="/booking/{{ f.id }}" class="btn btn-primary btn-sm">Выбрать</a>
+                {% if current_user %}
+                <form method="post" action="/favorites/{{ f.id }}/add" style="display:inline;">
+                    <button type="submit" class="btn btn-ghost btn-sm" title="Добавить в избранное">♥</button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+    </article>
+    {% endfor %}
+</section>
+{% else %}
+<div class="empty-state">
+    <h2>Рейсы не найдены</h2>
+    <p>Попробуйте изменить фильтры или заполнить базу тестовыми данными через <code>python -m app.seed</code>.</p>
+</div>
+{% endif %}
+{% endblock %}
+

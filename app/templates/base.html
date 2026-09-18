@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ settings.app_name }}{% endblock %}</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%E2%9C%88%3C/text%3E%3C/svg%3E" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+<header class="site-header">
+    <div class="container header-inner">
+        <a class="logo" href="/">
+            <span class="logo-mark">✈</span>
+            <span class="logo-text">SkyRoutes</span>
+        </a>
+        <nav class="main-nav">
+            <a href="/">Главная</a>
+            <a href="/flights">Поиск рейсов</a>
+            {% if current_user %}
+            <a href="/my-bookings">Мои брони</a>
+            <a href="/favorites">Избранное</a>
+            <a href="/profile">Профиль</a>
+            {% else %}
+            <a href="/my-bookings">Мои бронирования</a>
+            {% endif %}
+            <a href="/about">О проекте</a>
+            {% if current_user and current_user.is_admin %}
+            <a href="/admin" class="admin-link">Админка</a>
+            {% endif %}
+            <a href="/docs" target="_blank">API</a>
+        </nav>
+        <div class="auth-nav">
+            {% if current_user %}
+            <span class="user-name">{{ current_user.full_name }}</span>
+            <a href="/logout" class="btn btn-ghost btn-sm">Выйти</a>
+            {% else %}
+            <a href="/login" class="btn btn-ghost btn-sm">Войти</a>
+            <a href="/register" class="btn btn-primary btn-sm">Регистрация</a>
+            {% endif %}
+        </div>
+    </div>
+</header>
+
+<main class="container main-content">
+    {% block content %}{% endblock %}
+</main>
+
+<footer class="site-footer">
+    <div class="container footer-inner">
+        <span>&copy; 2026 SkyRoutes · Заготовка на FastAPI</span>
+        <span class="footer-meta">{{ settings.app_version }}</span>
+    </div>
+</footer>
+
+<div id="toast" class="toast" hidden></div>
+
+<script src="/static/app.js" defer></script>
+</body>
+</html>

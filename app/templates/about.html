@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}О проекте — {{ settings.app_name }}{% endblock %}
+
+{% block content %}
+<div class="booking-header">
+    <h1 class="page-title">О проекте SkyRoutes</h1>
+</div>
+
+<section class="info-grid">
+    <article class="info-card">
+        <div class="info-icon">🚀</div>
+        <h3>Что это</h3>
+        <p>SkyRoutes — заготовка сервиса поиска и бронирования авиабилетов на FastAPI.
+        Асинхронная SQLAlchemy, JWT-аутентификация, REST API, Jinja2-шаблоны,
+        Docker и pytest-тесты. Полностью на русском языке.</p>
+    </article>
+    <article class="info-card">
+        <div class="info-icon">🛠</div>
+        <h3>Технологии</h3>
+        <p>FastAPI 0.115, SQLAlchemy 2.0 (async), Pydantic v2, JWT (PyJWT) + bcrypt,
+        SQLite/PostgreSQL, Jinja2, Docker, pytest + httpx. Архитектура модульная:
+        каждый домен (auth, flights, bookings, admin) — отдельный роутер.</p>
+    </article>
+    <article class="info-card">
+        <div class="info-icon">📊</div>
+        <h3>Возможности</h3>
+        <p>Поиск рейсов с фильтрами и сортировкой, бронирование до 9 пассажиров,
+        классы обслуживания (эконом/премиум/бизнес/первый), админ-панель со статистикой
+        и популярными направлениями, управление рейсами через REST API.</p>
+    </article>
+    <article class="info-card">
+        <div class="info-icon">🔐</div>
+        <h3>Безопасность</h3>
+        <p>Пароли хешируются через bcrypt, доступ к защищённым эндпоинтам — через
+        JWT-токен (Bearer для API, httponly-cookie для HTML). Админ-эндпоинты
+        требуют флаг <code>is_admin=True</code>.</p>
+    </article>
+    <article class="info-card">
+        <div class="info-icon">🧪</div>
+        <h3>Тестирование</h3>
+        <p>16 pytest-тестов покрывают auth, бронирования, поиск рейсов и edge-cases.
+        Дополнительный smoke-тест в <code>scripts/test_api.py</code> поднимает uvicorn
+        и проходит все сценарии за один запуск.</p>
+    </article>
+    <article class="info-card">
+        <div class="info-icon">📦</div>
+        <h3>Развёртывание</h3>
+        <p>Локально через <code>venv</code>, в Docker через <code>docker compose up --build</code>,
+        в проде — через PostgreSQL (меняется только DATABASE_URL). Логирование в stdout,
+        ошибки логируются с трейсбэком, для API возвращается JSON-ответ.</p>
+    </article>
+</section>
+
+<section class="info-cta">
+    <h2>Готовы начать?</h2>
+    <p>Найдите свой первый рейс или войдите в аккаунт, чтобы управлять бронированиями.</p>
+    <div class="cta-actions">
+        <a href="/flights" class="btn btn-primary">Найти рейс</a>
+        <a href="/register" class="btn btn-ghost">Создать аккаунт</a>
+    </div>
+</section>
+{% endblock %}

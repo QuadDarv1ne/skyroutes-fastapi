@@ -1,0 +1,22 @@
+# Docker ignore — файлы, которые не нужно копировать в образ
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.git/
+.gitignore
+.env
+*.db
+*.sqlite3
+tests/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+*.log
+README.md
+Dockerfile
+docker-compose.yml

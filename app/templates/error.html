@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Ошибка {{ status_code }}{% endblock %}
+
+{% block content %}
+<div class="error-page">
+    <div class="error-code">{{ status_code }}</div>
+    <h1>Что-то пошло не так</h1>
+    <p class="error-message">
+        {% if status_code == 403 %}
+        У вас нет доступа к этой странице.
+        {% elif status_code == 401 %}
+        Необходимо войти в аккаунт.
+        {% elif status_code == 500 %}
+        Внутренняя ошибка сервера. Мы уже работаем над этим.
+        {% else %}
+        При обработке запроса возникла ошибка.
+        {% endif %}
+    </p>
+    {% if detail %}
+    <p class="error-detail">{{ detail }}</p>
+    {% endif %}
+    <div class="error-actions">
+        <a href="/" class="btn btn-primary">На главную</a>
+        {% if status_code == 401 or status_code == 403 %}
+        <a href="/login" class="btn btn-ghost">Войти</a>
+        {% else %}
+        <a href="/contacts" class="btn btn-ghost">Поддержка</a>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

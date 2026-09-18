@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block title %}Админ-панель — {{ settings.app_name }}{% endblock %}
+
+{% block content %}
+<div class="booking-header">
+    <h1 class="page-title">Админ-панель</h1>
+    <span class="admin-badge">Привет, {{ current_user.full_name }}</span>
+</div>
+
+<section class="stats-grid">
+    <div class="stat-card stat-primary">
+        <div class="stat-label">Рейсы (активные)</div>
+        <div class="stat-value">{{ stats.flights_active }} / {{ stats.flights_total }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Бронирования</div>
+        <div class="stat-value">{{ stats.bookings_total }}</div>
+        <div class="stat-sub">
+            <span class="status status-pending">{{ stats.bookings_pending }} pending</span>
+            <span class="status status-confirmed">{{ stats.bookings_confirmed }} confirmed</span>
+            <span class="status status-cancelled">{{ stats.bookings_cancelled }} cancelled</span>
+        </div>
+    </div>
+    <div class="stat-card stat-success">
+        <div class="stat-label">Выручка (всего)</div>
+        <div class="stat-value">{{ '%.0f'|format(stats.revenue_total) }} {{ settings.currency_symbol }}</div>
+        <div class="stat-sub">в ожидании: {{ '%.0f'|format(stats.revenue_pending) }} {{ settings.currency_symbol }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Пассажиры</div>
+        <div class="stat-value">{{ stats.passengers_total }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Пользователи</div>
+        <div class="stat-value">{{ stats.users_total }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Города</div>
+        <div class="stat-value">{{ stats.cities_total }}</div>
+    </div>
+</section>
+
+<div class="admin-grid">
+    <section class="admin-block">
+        <h2>Популярные направления</h2>
+        {% if popular_routes %}
+        <table class="admin-table">
+            <thead>
+                <tr><th>Маршрут</th><th>Брони</th><th>Выручка</th></tr>
+            </thead>
+            <tbody>
+                {% for r in popular_routes %}
+                <tr>
+                    <td><b>{{ r.origin_code }}</b> → <b>{{ r.destination_code }}</b><br>
+                        <span class="muted">{{ r.origin_name }} → {{ r.destination_name }}</span></td>
+                    <td>{{ r.bookings_count }}</td>
+                    <td>{{ '%.0f'|format(r.revenue) }} {{ settings.currency_symbol }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p class="muted">Пока нет данных — сделайте первое бронирование.</p>
+        {% endif %}
+    </section>
+
+    <section class="admin-block">
+        <h2>Топ авиакомпаний</h2>
+        {% if top_airlines %}
+        <table class="admin-table">
+            <thead>
+                <tr><th>Авиакомпания</th><th>Брони</th><th>Выручка</th></tr>
+            </thead>
+            <tbody>
+                {% for a in top_airlines %}
+                <tr>
+                    <td>{{ a.airline }}</td>
+                    <td>{{ a.bookings_count }}</td>
+                    <td>{{ '%.0f'|format(a.revenue) }} {{ settings.currency_symbol }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p class="muted">Пока нет данных.</p>
+        {% endif %}
+    </section>
+</div>
+
+<section class="admin-block">
+    <h2>API для управления</h2>
+    <p class="muted">Все операции доступны через REST API:</p>
+    <ul class="api-links">
+        <li><code>POST /api/admin/flights</code> — создать рейс</li>
+        <li><code>PATCH /api/admin/flights/{id}</code> — обновить рейс</li>
+        <li><code>DELETE /api/admin/flights/{id}</code> — деактивировать рейс</li>
+        <li><code>POST /api/admin/cities</code> — добавить город</li>
+        <li><code>GET /api/admin/stats</code> — сводная статистика</li>
+        <li><code>GET /api/admin/stats/extended</code> — с популярными направлениями</li>
+    </ul>
+    <p><a href="/docs" target="_blank" class="btn btn-primary btn-sm">Открыть Swagger UI →</a></p>
+</section>
+{% endblock %}

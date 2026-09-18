@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}Бронирование {{ booking.code }} — {{ settings.app_name }}{% endblock %}
+
+{% block content %}
+<div class="booking-header">
+    <a href="/flights" class="back-link">← Назад к рейсам</a>
+    <h1 class="page-title">Бронирование подтверждено</h1>
+</div>
+
+<section class="confirm-card">
+    <div class="pnr-box">
+        <span class="pnr-label">Код бронирования (PNR)</span>
+        <span class="pnr-value">{{ booking.code }}</span>
+    </div>
+
+    <div class="flight-route mini">
+        <div class="flight-point">
+            <div class="flight-time">{{ booking.flight.departure_at.strftime('%H:%M') }}</div>
+            <div class="flight-code">{{ booking.flight.origin_city.code }}</div>
+            <div class="flight-city">{{ booking.flight.origin_city.name }}</div>
+        </div>
+        <div class="flight-arrow">
+            <div class="flight-line"></div>
+            <div class="flight-airline">{{ booking.flight.airline }} · {{ booking.flight.flight_number }}</div>
+        </div>
+        <div class="flight-point">
+            <div class="flight-time">{{ booking.flight.arrival_at.strftime('%H:%M') }}</div>
+            <div class="flight-code">{{ booking.flight.destination_city.code }}</div>
+            <div class="flight-city">{{ booking.flight.destination_city.name }}</div>
+        </div>
+    </div>
+
+    <div class="summary-meta">
+        <div>Дата вылета: <b>{{ booking.flight.departure_at.strftime('%d.%m.%Y') }}</b></div>
+        <div>Статус: <b class="status status-{{ booking.status.value }}">{{ booking.status.value }}</b></div>
+        <div>Email: <b>{{ booking.contact_email }}</b></div>
+        <div>Телефон: <b>{{ booking.contact_phone }}</b></div>
+        <div class="total-price">Итого: <b>{{ '%.0f'|format(booking.total_price) }} {{ settings.currency_symbol }}</b></div>
+    </div>
+
+    <h2>Пассажиры</h2>
+    <table class="passenger-table">
+        <thead>
+            <tr><th>Имя</th><th>Фамилия</th><th>Дата рожд.</th><th>Паспорт</th><th>Класс</th></tr>
+        </thead>
+        <tbody>
+            {% for p in booking.passengers %}
+            <tr>
+                <td>{{ p.first_name }}</td>
+                <td>{{ p.last_name }}</td>
+                <td>{{ p.birth_date.strftime('%d.%m.%Y') }}</td>
+                <td>{{ p.passport_number }}</td>
+                <td>{{ p.cabin_class.value }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="actions">
+        <a href="/flights" class="btn btn-primary">Найти ещё рейсы</a>
+        {% if current_user %}
+            {% if booking.status.value == 'pending' %}
+            <form method="post" action="/booking/{{ booking.code }}/confirm" style="display:inline;">
+                <button type="submit" class="btn btn-primary">✓ Подтвердить</button>
+            </form>
+            <form method="post" action="/booking/{{ booking.code }}/cancel" style="display:inline;">
+                <button type="submit" class="btn btn-ghost" onclick="return confirm('Отменить бронирование?')">✗ Отменить</button>
+            </form>
+            {% elif booking.status.value == 'confirmed' %}
+            <form method="post" action="/booking/{{ booking.code }}/cancel" style="display:inline;">
+                <button type="submit" class="btn btn-ghost" onclick="return confirm('Отменить бронирование?')">✗ Отменить</button>
+            </form>
+            {% endif %}
+        {% endif %}
+        <button type="button" class="btn btn-ghost" onclick="window.print()">🖨 Печать / PDF</button>
+    </div>
+</section>
+{% endblock %}

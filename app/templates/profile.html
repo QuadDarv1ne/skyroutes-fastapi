@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% block title %}Профиль — {{ settings.app_name }}{% endblock %}
+
+{% block content %}
+<div class="booking-header">
+    <h1 class="page-title">Профиль</h1>
+    <span class="admin-badge">{{ current_user.full_name }}</span>
+</div>
+
+<section class="stats-grid">
+    <div class="stat-card stat-success">
+        <div class="stat-label">Всего потрачено</div>
+        <div class="stat-value">{{ '%.0f'|format(total_spent) }} {{ settings.currency_symbol }}</div>
+        <div class="stat-sub">по всем активным броням</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Активные брони</div>
+        <div class="stat-value">{{ active_bookings_count }}</div>
+        <div class="stat-sub">включая pending</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Отменённые</div>
+        <div class="stat-value">{{ cancelled_bookings_count }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Избранные рейсы</div>
+        <div class="stat-value">{{ favorites_count }}</div>
+        <div class="stat-sub"><a href="/favorites" class="link">смотреть →</a></div>
+    </div>
+</section>
+
+<section class="info-cta">
+    <h2>Аккаунт</h2>
+    <div class="profile-info">
+        <div class="profile-row">
+            <span class="profile-label">Email:</span>
+            <span class="profile-value">{{ current_user.email }}</span>
+        </div>
+        <div class="profile-row">
+            <span class="profile-label">Имя:</span>
+            <span class="profile-value">{{ current_user.full_name }}</span>
+        </div>
+        <div class="profile-row">
+            <span class="profile-label">Роль:</span>
+            <span class="profile-value">
+                {% if current_user.is_admin %}
+                <span class="status status-confirmed">администратор</span>
+                {% else %}
+                <span class="status status-pending">пользователь</span>
+                {% endif %}
+            </span>
+        </div>
+        <div class="profile-row">
+            <span class="profile-label">Регистрация:</span>
+            <span class="profile-value">{{ current_user.created_at.strftime('%d.%m.%Y %H:%M') }}</span>
+        </div>
+    </div>
+    <div class="cta-actions">
+        <a href="/my-bookings" class="btn btn-primary">Мои бронирования</a>
+        <a href="/favorites" class="btn btn-ghost">Избранные рейсы</a>
+        <a href="/search-history" class="btn btn-ghost">История поиска</a>
+        <a href="/logout" class="btn btn-ghost">Выйти</a>
+    </div>
+</section>
+
+<section class="info-cta">
+    <h2>Последние бронирования</h2>
+    {% if user_bookings %}
+    <div class="booking-list">
+        {% for b in user_bookings[:5] %}
+        <article class="booking-list-card">
+            <div class="booking-list-header">
+                <span class="pnr-badge">{{ b.code }}</span>
+                <span class="status status-{{ b.status.value }}">{{ b.status.value }}</span>
+                <span class="booking-date">{{ b.created_at.strftime('%d.%m.%Y %H:%M') }}</span>
+            </div>
+            <div class="flight-route mini">
+                <div class="flight-point">
+                    <div class="flight-time">{{ b.flight.departure_at.strftime('%H:%M') }}</div>
+                    <div class="flight-code">{{ b.flight.origin_city.code }}</div>
+                    <div class="flight-city">{{ b.flight.origin_city.name }}</div>
+                </div>
+                <div class="flight-arrow">
+                    <div class="flight-line"></div>
+                    <div class="flight-airline">{{ b.flight.airline }}</div>
+                </div>
+                <div class="flight-point">
+                    <div class="flight-time">{{ b.flight.arrival_at.strftime('%H:%M') }}</div>
+                    <div class="flight-code">{{ b.flight.destination_city.code }}</div>
+                    <div class="flight-city">{{ b.flight.destination_city.name }}</div>
+                </div>
+            </div>
+            <div class="booking-list-footer">
+                <span>{{ b.passengers | length }} пассажир(а)</span>
+                <span class="booking-total">{{ '%.0f'|format(b.total_price) }} {{ settings.currency_symbol }}</span>
+                <a href="/booking/{{ b.code }}/view" class="btn btn-ghost btn-sm">Подробнее</a>
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+    <div class="cta-actions">
+        <a href="/my-bookings" class="btn btn-ghost btn-sm">Все бронирования →</a>
+    </div>
+    {% else %}
+    <p class="muted">У вас пока нет бронирований. <a href="/flights">Найти рейс →</a></p>
+    {% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Вход — {{ settings.app_name }}{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+    <form class="auth-card" method="post" action="/login">
+        <h1>Вход в аккаунт</h1>
+        <p class="auth-subtitle">Войдите, чтобы управлять бронированиями</p>
+
+        <label>
+            <span>Email</span>
+            <input type="email" name="email" required autocomplete="email">
+        </label>
+        <label>
+            <span>Пароль</span>
+            <input type="password" name="password" required autocomplete="current-password">
+        </label>
+
+        <button type="submit" class="btn btn-primary btn-block">Войти</button>
+
+        <p class="auth-hint">
+            Нет аккаунта? <a href="/register">Зарегистрироваться</a>
+        </p>
+    </form>
+</div>
+{% endblock %}

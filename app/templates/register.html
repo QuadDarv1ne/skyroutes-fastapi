@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Регистрация — {{ settings.app_name }}{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+    <form class="auth-card" method="post" action="/register">
+        <h1>Создать аккаунт</h1>
+        <p class="auth-subtitle">Бронируйте рейсы быстрее — данные пассажира будут подставляться автоматически</p>
+
+        <label>
+            <span>Имя и фамилия</span>
+            <input type="text" name="full_name" required autocomplete="name">
+        </label>
+        <label>
+            <span>Email</span>
+            <input type="email" name="email" required autocomplete="email">
+        </label>
+        <label>
+            <span>Пароль (минимум 8 символов)</span>
+            <input type="password" name="password" required minlength="8" autocomplete="new-password">
+        </label>
+
+        <button type="submit" class="btn btn-primary btn-block">Зарегистрироваться</button>
+
+        <p class="auth-hint">
+            Уже есть аккаунт? <a href="/login">Войти</a>
+        </p>
+    </form>
+</div>
+{% endblock %}

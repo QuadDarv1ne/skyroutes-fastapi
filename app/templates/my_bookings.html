@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}Мои бронирования — {{ settings.app_name }}{% endblock %}
+
+{% block content %}
+<div class="booking-header">
+    <h1 class="page-title">Мои бронирования</h1>
+</div>
+
+{% if not current_user %}
+<form class="filter-card" method="get" action="/my-bookings">
+    <label>
+        <span>Email, использованный при бронировании</span>
+        <input type="email" name="email" required value="{{ search_email }}" placeholder="ivan@example.com">
+    </label>
+    <div class="filter-actions">
+        <button type="submit" class="btn btn-primary">Найти</button>
+    </div>
+</form>
+{% endif %}
+
+{% if bookings %}
+<section class="booking-list">
+    {% for b in bookings %}
+    <article class="booking-list-card">
+        <div class="booking-list-header">
+            <span class="pnr-badge">{{ b.code }}</span>
+            <span class="status status-{{ b.status.value }}">{{ b.status.value }}</span>
+            <span class="booking-date">{{ b.created_at.strftime('%d.%m.%Y %H:%M') }}</span>
+        </div>
+        <div class="flight-route mini">
+            <div class="flight-point">
+                <div class="flight-time">{{ b.flight.departure_at.strftime('%H:%M') }}</div>
+                <div class="flight-code">{{ b.flight.origin_city.code }}</div>
+                <div class="flight-city">{{ b.flight.origin_city.name }}</div>
+            </div>
+            <div class="flight-arrow">
+                <div class="flight-line"></div>
+                <div class="flight-airline">{{ b.flight.airline }} · {{ b.flight.flight_number }}</div>
+            </div>
+            <div class="flight-point">
+                <div class="flight-time">{{ b.flight.arrival_at.strftime('%H:%M') }}</div>
+                <div class="flight-code">{{ b.flight.destination_city.code }}</div>
+                <div class="flight-city">{{ b.flight.destination_city.name }}</div>
+            </div>
+        </div>
+        <div class="booking-list-footer">
+            <span>Пассажиров: <b>{{ b.passengers | length }}</b></span>
+            <span class="booking-total">{{ '%.0f'|format(b.total_price) }} {{ settings.currency_symbol }}</span>
+            <a href="/booking/{{ b.code }}/view" class="btn btn-ghost btn-sm">Подробнее</a>
+        </div>
+    </article>
+    {% endfor %}
+</section>
+{% elif current_user or search_email %}
+<div class="empty-state">
+    <h2>Бронирований не найдено</h2>
+    <p>Начните путешествие — <a href="/flights">найдите подходящий рейс</a>.</p>
+</div>
+{% endif %}
+{% endblock %}

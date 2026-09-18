@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}История поиска — {{ settings.app_name }}{% endblock %}
+
+{% block content %}
+<div class="booking-header">
+    <a href="/flights" class="back-link">← К поиску рейсов</a>
+    <h1 class="page-title">История поиска</h1>
+</div>
+
+{% if history %}
+<div class="results-meta">
+    Последние <b>{{ history|length }}</b> поисковых запросов
+</div>
+<section class="booking-list">
+    {% for h in history %}
+    <article class="booking-list-card">
+        <div class="booking-list-header">
+            <span class="pnr-badge">{{ h.origin_code or "—" }} → {{ h.destination_code or "—" }}</span>
+            <span class="booking-date">{{ h.created_at.strftime('%d.%m.%Y %H:%M') }}</span>
+        </div>
+        <div class="search-filters">
+            {% if h.date_from %}<span>Дата с: <b>{{ h.date_from.strftime('%d.%m.%Y') }}</b></span>{% endif %}
+            {% if h.date_to %}<span>Дата по: <b>{{ h.date_to.strftime('%d.%m.%Y') }}</b></span>{% endif %}
+            {% if h.max_price %}<span>Макс. цена: <b>{{ '%.0f'|format(h.max_price) }} {{ settings.currency_symbol }}</b></span>{% endif %}
+            <span class="results-count-badge">Найдено: <b>{{ h.results_count }}</b></span>
+        </div>
+        <div class="booking-list-footer">
+            <a href="/flights?origin={{ h.origin_code or '' }}&destination={{ h.destination_code or '' }}{% if h.date_from %}&date_from={{ h.date_from.isoformat() }}{% endif %}{% if h.date_to %}&date_to={{ h.date_to.isoformat() }}{% endif %}{% if h.max_price %}&max_price={{ h.max_price }}{% endif %}"
+               class="btn btn-primary btn-sm">Повторить поиск</a>
+        </div>
+    </article>
+    {% endfor %}
+</section>
+{% else %}
+<div class="empty-state">
+    <h2>История пуста</h2>
+    <p>Когда вы будете искать рейсы с фильтрами, запросы появятся здесь.</p>
+    <div class="cta-actions" style="margin-top: 16px;">
+        <a href="/flights" class="btn btn-primary">Начать поиск</a>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

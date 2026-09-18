@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Избранные рейсы — {{ settings.app_name }}{% endblock %}
+
+{% block content %}
+<div class="booking-header">
+    <a href="/flights" class="back-link">← К поиску рейсов</a>
+    <h1 class="page-title">Избранные рейсы</h1>
+</div>
+
+{% if flights %}
+<div class="results-meta">
+    В избранном: <b>{{ flights|length }}</b> рейсов
+</div>
+<section class="flight-list">
+    {% for f in flights %}
+    <article class="flight-card">
+        <div class="flight-route">
+            <div class="flight-point">
+                <div class="flight-time">{{ f.departure_at.strftime('%H:%M') }}</div>
+                <div class="flight-code">{{ f.origin_city.code }}</div>
+                <div class="flight-city">{{ f.origin_city.name }}</div>
+            </div>
+            <div class="flight-arrow">
+                <div class="flight-duration">{{ (f.duration_minutes // 60) }}ч {{ (f.duration_minutes % 60) }}м</div>
+                <div class="flight-line"></div>
+                <div class="flight-airline">{{ f.airline }} · {{ f.aircraft }}</div>
+            </div>
+            <div class="flight-point">
+                <div class="flight-time">{{ f.arrival_at.strftime('%H:%M') }}</div>
+                <div class="flight-code">{{ f.destination_city.code }}</div>
+                <div class="flight-city">{{ f.destination_city.name }}</div>
+            </div>
+        </div>
+        <div class="flight-meta">
+            <div class="flight-date">{{ f.departure_at.strftime('%d.%m.%Y') }}</div>
+            <div class="flight-seats">Свободно мест: <b>{{ f.seats_available }}</b></div>
+            <div class="flight-price">{{ '%.0f'|format(f.base_price) }} {{ settings.currency_symbol }}</div>
+            <div class="flight-actions">
+                <a href="/booking/{{ f.id }}" class="btn btn-primary btn-sm">Забронировать</a>
+                <form method="post" action="/favorites/{{ f.id }}/remove" style="display:inline;">
+                    <button type="submit" class="btn btn-ghost btn-sm">♥ Убрать</button>
+                </form>
+            </div>
+        </div>
+    </article>
+    {% endfor %}
+</section>
+{% else %}
+<div class="empty-state">
+    <h2>Избранное пусто</h2>
+    <p>Добавляйте рейсы в избранное кнопкой ♥ на странице поиска или деталей рейса.</p>
+    <div class="cta-actions" style="margin-top: 16px;">
+        <a href="/flights" class="btn btn-primary">Найти рейсы</a>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

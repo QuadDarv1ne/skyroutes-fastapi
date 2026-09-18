@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}{{ settings.app_name }} — Путешествия и авиаперелёты{% endblock %}
+
+{% block content %}
+<section class="hero">
+    <div class="hero-content">
+        <h1>Путешествуй дальше — <span class="accent">бронируй быстрее</span></h1>
+        <p class="hero-subtitle">
+            Поиск и бронирование авиабилетов в одну страну и обратно.
+            Прозрачные цены, мгновенное подтверждение, поддержка 24/7.
+        </p>
+    </div>
+
+    <form class="search-card" action="/flights" method="get">
+        <div class="search-grid">
+            <label>
+                <span>Откуда</span>
+                <select name="origin" required>
+                    <option value="">Любой город</option>
+                    {% for c in cities %}
+                    <option value="{{ c.code }}">{{ c.name }} ({{ c.code }}), {{ c.country }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+            <label>
+                <span>Куда</span>
+                <select name="destination" required>
+                    <option value="">Любой город</option>
+                    {% for c in cities %}
+                    <option value="{{ c.code }}">{{ c.name }} ({{ c.code }}), {{ c.country }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+            <label>
+                <span>Дата с</span>
+                <input type="date" name="date_from">
+            </label>
+            <label>
+                <span>Дата по</span>
+                <input type="date" name="date_to">
+            </label>
+            <label>
+                <span>Макс. цена, {{ settings.currency_symbol }}</span>
+                <input type="number" name="max_price" min="0" step="100">
+            </label>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">Найти рейсы</button>
+    </form>
+</section>
+
+<section class="features">
+    <article class="feature">
+        <div class="feature-icon">🔎</div>
+        <h3>Умный поиск</h3>
+        <p>Фильтрация по дате, цене, авиакомпании и количеству доступных мест — найди именно тот рейс, который нужен.</p>
+    </article>
+    <article class="feature">
+        <div class="feature-icon">⚡</div>
+        <h3>Мгновенное бронирование</h3>
+        <p>Билет и PNR выдаются сразу после подтверждения формы. Без ожидания менеджера и звонков.</p>
+    </article>
+    <article class="feature">
+        <div class="feature-icon">🌐</div>
+        <h3>Открытый REST API</h3>
+        <p>Все возможности доступны через JSON API — интегрируй бронирование в свой сервис или чат-бот.</p>
+    </article>
+</section>
+{% endblock %}

@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}Бронирование — {{ settings.app_name }}{% endblock %}
+
+{% block content %}
+<div class="booking-header">
+    <a href="/flights" class="back-link">← Назад к рейсам</a>
+    <h1 class="page-title">Бронирование рейса</h1>
+</div>
+
+<div class="booking-grid">
+    <section class="flight-summary">
+        <h2>{{ flight.flight_number }} · {{ flight.airline }}</h2>
+        <div class="flight-route mini">
+            <div class="flight-point">
+                <div class="flight-time">{{ flight.departure_at.strftime('%H:%M') }}</div>
+                <div class="flight-code">{{ flight.origin_city.code }}</div>
+                <div class="flight-city">{{ flight.origin_city.name }}</div>
+            </div>
+            <div class="flight-arrow">
+                <div class="flight-line"></div>
+                <div class="flight-airline">{{ flight.aircraft }}</div>
+            </div>
+            <div class="flight-point">
+                <div class="flight-time">{{ flight.arrival_at.strftime('%H:%M') }}</div>
+                <div class="flight-code">{{ flight.destination_city.code }}</div>
+                <div class="flight-city">{{ flight.destination_city.name }}</div>
+            </div>
+        </div>
+        <div class="summary-meta">
+            <div>Дата вылета: <b>{{ flight.departure_at.strftime('%d.%m.%Y') }}</b></div>
+            <div>Свободно мест: <b>{{ flight.seats_available }}</b></div>
+            <div>Базовая цена: <b>{{ '%.0f'|format(flight.base_price) }} {{ settings.currency_symbol }}</b></div>
+        </div>
+    </section>
+
+    <form class="booking-form" method="post" action="/booking/{{ flight.id }}" id="bookingForm">
+        <h2>Контактные данные</h2>
+        <label><span>Email</span><input type="email" name="contact_email" required></label>
+        <label><span>Телефон</span><input type="tel" name="contact_phone" required placeholder="+7..."></label>
+
+        <h2>Пассажиры</h2>
+        <div id="passengers"></div>
+        <button type="button" class="btn btn-ghost" id="addPassenger">+ Добавить пассажира</button>
+
+        <template id="passengerTemplate">
+            <fieldset class="passenger-block">
+                <legend>Пассажир <span class="pnum"></span></legend>
+                <div class="passenger-grid">
+                    <label><span>Имя</span><input type="text" name="passenger_first_name" required></label>
+                    <label><span>Фамилия</span><input type="text" name="passenger_last_name" required></label>
+                    <label><span>Дата рождения</span><input type="date" name="passenger_birth_date" required></label>
+                    <label><span>Паспорт</span><input type="text" name="passenger_passport" required></label>
+                    <label>
+                        <span>Класс</span>
+                        <select name="passenger_cabin">
+                            <option value="economy">Эконом · ×1.0</option>
+                            <option value="premium">Премиум · ×1.4</option>
+                            <option value="business">Бизнес · ×2.5</option>
+                            <option value="first">Первый · ×4.0</option>
+                        </select>
+                    </label>
+                </div>
+                <button type="button" class="btn-link remove-passenger">Удалить</button>
+            </fieldset>
+        </template>
+
+        <button type="submit" class="btn btn-primary btn-block">Забронировать</button>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,66 @@
+# === SkyRoutes через Docker Compose с PostgreSQL ===
+# Production-конфигурация с базой данных PostgreSQL.
+#
+# Запуск:
+#   docker compose --profile postgres up --build
+# Остановка:
+#   docker compose --profile postgres down
+# С пересозданием БД:
+#   docker compose --profile postgres down -v && docker compose --profile postgres up --build
+
+services:
+  app:
+    build: .
+    container_name: skyroutes-app
+    ports:
+      - "8000:8000"
+    environment:
+      TRAVEL_APP_NAME: "SkyRoutes — Путешествия и Авиаперелёты"
+      TRAVEL_DEBUG: "False"
+      TRAVEL_DATABASE_URL: "sqlite+aiosqlite:///./travel.db"
+      TRAVEL_SECRET_KEY: "change-me-in-production-please-use-long-random-string"
+      TRAVEL_ACCESS_TOKEN_EXPIRE_MINUTES: "1440"
+    volumes:
+      - app-data:/app/data
+    restart: unless-stopped
+    profiles: ["default"]
+
+  app-pg:
+    build: .
+    container_name: skyroutes-app-pg
+    ports:
+      - "8000:8000"
+    environment:
+      TRAVEL_APP_NAME: "SkyRoutes (PostgreSQL)"
+      TRAVEL_DEBUG: "False"
+      TRAVEL_DATABASE_URL: "postgresql+asyncpg://skyroutes:skyroutes@db:5432/skyroutes"
+      TRAVEL_SECRET_KEY: "change-me-in-production-please-use-long-random-string"
+      TRAVEL_ACCESS_TOKEN_EXPIRE_MINUTES: "1440"
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+    profiles: ["postgres"]
+
+  db:
+    image: postgres:16-alpine
+    container_name: skyroutes-db
+    environment:
+      POSTGRES_USER: skyroutes
+      POSTGRES_PASSWORD: skyroutes
+      POSTGRES_DB: skyroutes
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U skyroutes -d skyroutes"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    profiles: ["postgres"]
+
+volumes:
+  app-data:
+  pg-data:
