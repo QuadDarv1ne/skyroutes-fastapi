@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.crud import get_user_search_history
 from app.database import get_db
-from app.models import SearchHistory, User
+from app.models import User
 from app.security import require_user
 
 

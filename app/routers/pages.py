@@ -10,10 +10,7 @@ from fastapi.templating import Jinja2Templates
 from app.config import settings
 from app.crud import (
     add_favorite,
-    add_search_history,
-    count_flights_filtered,
     create_booking,
-    create_city,
     create_user,
     get_bookings_by_email,
     get_booking_by_code,
@@ -39,7 +36,6 @@ from app.models import BookingStatus, CabinClass, User
 from app.security import (
     create_access_token,
     decode_token,
-    get_current_user,
     verify_password,
 )
 from sqlalchemy.ext.asyncio import AsyncSession

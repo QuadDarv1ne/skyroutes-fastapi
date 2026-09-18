@@ -12,7 +12,7 @@ from app.crud import create_user
 @pytest.mark.asyncio
 async def test_password_reset_request_for_existing_user(client, db_session: AsyncSession):
     """Запрос сброса для существующего email — 202 + в debug возвращает demo_reset_url."""
-    user = await create_user(
+    await create_user(
         db_session,
         email="reset@example.com",
         password="oldpassword",
@@ -44,7 +44,7 @@ async def test_password_reset_request_for_nonexistent_email(client):
 @pytest.mark.asyncio
 async def test_password_reset_confirm_with_valid_token(client, db_session: AsyncSession):
     """Полный цикл: запрос → использование токена → смена пароля → вход."""
-    user = await create_user(
+    await create_user(
         db_session,
         email="fullcycle@example.com",
         password="oldpassword123",
@@ -91,7 +91,7 @@ async def test_password_reset_confirm_with_invalid_token(client):
 @pytest.mark.asyncio
 async def test_password_reset_confirm_with_used_token(client, db_session: AsyncSession):
     """Токен можно использовать только один раз."""
-    user = await create_user(
+    await create_user(
         db_session,
         email="used@example.com",
         password="oldpassword123",
@@ -137,7 +137,7 @@ async def test_password_reset_page_html(client):
 
 async def _admin_token(client, db_session: AsyncSession) -> dict:
     """Создаёт админа и возвращает заголовки."""
-    user = await create_user(
+    await create_user(
         db_session,
         email="audit-admin@example.com",
         password="adminsecret",
@@ -202,7 +202,7 @@ async def test_admin_audit_requires_admin(client, db_session: AsyncSession):
 @pytest.mark.asyncio
 async def test_admin_audit_page_html(client, db_session: AsyncSession):
     """HTML-страница аудита доступна для админа."""
-    headers = await _admin_token(client, db_session)
+    await _admin_token(client, db_session)
     # Логинимся через HTML-форму для cookie
     r = await client.post(
         "/api/auth/login",

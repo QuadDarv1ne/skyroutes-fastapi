@@ -20,7 +20,7 @@ class Settings(BaseSettings):
         validation_alias=AliasChoices("TRAVEL_APP_NAME", "APP_NAME"),
     )
     app_version: str = Field(
-        default="0.2.0",
+        default="0.7.0",
         validation_alias=AliasChoices("TRAVEL_APP_VERSION", "APP_VERSION"),
     )
     debug: bool = Field(

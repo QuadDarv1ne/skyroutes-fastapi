@@ -12,7 +12,7 @@ from app.crud import (
     update_booking_status,
 )
 from app.database import get_db
-from app.models import BookingStatus, User
+from app.models import User
 from app.schemas import BookingCreate, BookingRead, BookingStatusUpdate
 from app.security import get_current_user, require_user
 

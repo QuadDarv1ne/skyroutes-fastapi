@@ -12,7 +12,6 @@ from app.crud import (
     verify_password_reset_token,
 )
 from app.database import get_db
-from app.models import User
 from app.config import settings
 import logging
 

@@ -11,7 +11,7 @@ from app.models import City, Flight
 
 
 async def _admin_token(client, db: AsyncSession) -> dict:
-    user = await create_user(
+    await create_user(
         db,
         email="chart-admin@example.com",
         password="adminsecret",

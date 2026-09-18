@@ -34,25 +34,6 @@ async def _seed_flight(db: AsyncSession) -> int:
     return flight.id
 
 
-async def _login_session(client, db: AsyncSession) -> requests_session:
-    """Создаёт пользователя, логинится через HTML-форму, возвращает сессию с cookie."""
-    import requests
-    user = await create_user(
-        db, email="pager@example.com", password="password123", full_name="Pager"
-    )
-    await db.commit()
-
-    s = requests.Session()
-    r = s.post(
-        "http://127.0.0.1:8000/login",
-        data={"email": "pager@example.com", "password": "password123"},
-        allow_redirects=False,
-    )
-    # При тестах через ASGITransport нельзя использовать домен 127.0.0.1
-    # Поэтому возвращаем token напрямую
-    return user.id
-
-
 @pytest.mark.asyncio
 async def test_profile_page_requires_auth(client):
     """Профиль без логина — редирект на /login."""
@@ -64,7 +45,7 @@ async def test_profile_page_requires_auth(client):
 @pytest.mark.asyncio
 async def test_profile_page_with_auth(client, db_session: AsyncSession):
     """Профиль с логином — 200 и содержит данные пользователя."""
-    user = await create_user(
+    await create_user(
         db_session, email="profile@example.com", password="password123",
         full_name="Profile User",
     )
@@ -98,7 +79,7 @@ async def test_favorites_page_requires_auth(client):
 @pytest.mark.asyncio
 async def test_favorites_page_with_auth(client, db_session: AsyncSession):
     """Страница избранного с залогиненным пользователем — 200."""
-    user = await create_user(
+    await create_user(
         db_session, email="favpage@example.com", password="password123",
         full_name="Fav Page",
     )
@@ -128,7 +109,7 @@ async def test_search_history_page_requires_auth(client):
 
 @pytest.mark.asyncio
 async def test_search_history_page_with_auth(client, db_session: AsyncSession):
-    user = await create_user(
+    await create_user(
         db_session, email="sh@example.com", password="password123",
         full_name="SH User",
     )
@@ -153,7 +134,7 @@ async def test_search_history_page_with_auth(client, db_session: AsyncSession):
 async def test_favorites_add_via_html_form(client, db_session: AsyncSession):
     """Добавление в избранное через HTML-форму."""
     flight_id = await _seed_flight(db_session)
-    user = await create_user(
+    await create_user(
         db_session, email="favform@example.com", password="password123",
         full_name="Fav Form",
     )
@@ -177,7 +158,7 @@ async def test_favorites_add_via_html_form(client, db_session: AsyncSession):
 @pytest.mark.asyncio
 async def test_favorites_remove_via_html_form(client, db_session: AsyncSession):
     flight_id = await _seed_flight(db_session)
-    user = await create_user(
+    await create_user(
         db_session, email="favrm@example.com", password="password123",
         full_name="Fav Rm",
     )
@@ -210,7 +191,7 @@ async def test_favorites_remove_via_html_form(client, db_session: AsyncSession):
 async def test_booking_confirm_action(client, db_session: AsyncSession):
     """Подтверждение бронирования через HTML-форму."""
     flight_id = await _seed_flight(db_session)
-    user = await create_user(
+    await create_user(
         db_session, email="conf@example.com", password="password123",
         full_name="Confirm User",
     )
@@ -253,7 +234,7 @@ async def test_booking_confirm_action(client, db_session: AsyncSession):
 async def test_booking_cancel_action(client, db_session: AsyncSession):
     """Отмена бронирования через HTML-форму."""
     flight_id = await _seed_flight(db_session)
-    user = await create_user(
+    await create_user(
         db_session, email="cancel@example.com", password="password123",
         full_name="Cancel User",
     )
