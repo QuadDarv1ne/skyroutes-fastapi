@@ -36,9 +36,15 @@
 }
 
 :root[data-theme="dark"] input,
-:root[data-theme="dark"] select,
 :root[data-theme="dark"] textarea {
     background: #0e1726;
+    color: var(--text);
+    border-color: var(--border);
+}
+/* Select в тёмной теме: фон без шортката, чтобы не стереть SVG-стрелку */
+:root[data-theme="dark"] select {
+    background-color: #0e1726;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%239aa7bd' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
     color: var(--text);
     border-color: var(--border);
 }
@@ -242,7 +248,8 @@ body {
     color: var(--text-soft);
     font-weight: 500;
 }
-input, select {
+input, select, textarea {
+    width: 100%;
     padding: 10px 12px;
     border: 1px solid var(--border);
     border-radius: var(--radius-sm);
@@ -250,12 +257,54 @@ input, select {
     font-family: inherit;
     background: var(--surface);
     color: var(--text);
+    min-height: 42px;
     transition: border-color .15s, box-shadow .15s;
 }
-input:focus, select:focus {
+/* Чекбоксы и радио — не растягиваем */
+input[type="checkbox"],
+input[type="radio"] {
+    width: auto;
+    min-height: 0;
+    accent-color: var(--primary);
+}
+/* Number-инпуты: убираем «родные» стрелки, налезающие на границу */
+input[type="number"] {
+    appearance: textfield;
+    -moz-appearance: textfield;
+}
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+/* Select: свой стрелкой вместо системной — одинаковый вид во всех браузерах */
+select {
+    appearance: none;
+    -webkit-appearance: none;
+    padding-right: 34px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%235b6678' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+}
+select::-ms-expand { display: none; }
+input:focus, select:focus, textarea:focus {
     outline: none;
     border-color: var(--primary);
     box-shadow: 0 0 0 3px rgba(31, 95, 255, 0.15);
+}
+/* Дочерние элементы grid не должны распирать ячейки */
+.search-grid > *,
+.filter-card label {
+    min-width: 0;
+}
+.filter-actions .sort-label {
+    flex: 0 1 auto;
+    min-width: 170px;
+    max-width: 240px;
+}
+.filter-actions .btn {
+    margin-bottom: 2px;
+    flex: 0 0 auto;
 }
 .filter-actions {
     display: flex;
@@ -264,7 +313,6 @@ input:focus, select:focus {
     align-items: flex-end;
     flex-wrap: wrap;
 }
-.filter-actions .btn { margin-bottom: 2px; }
 
 /* === Buttons === */
 .btn {
