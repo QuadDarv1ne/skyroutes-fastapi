@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import secrets
-from datetime import datetime, date, timedelta
+from datetime import datetime, date, timedelta, timezone
 from typing import Optional
 
 from sqlalchemy import select, func, and_
@@ -11,7 +11,7 @@ from sqlalchemy.orm import aliased, selectinload
 
 from app.models import (
     City, Flight, Booking, Passenger, User, CabinClass, BookingStatus,
-    Favorite, SearchHistory,
+    Favorite, SearchHistory, PasswordResetToken, AuditLog,
 )
 from app.schemas import BookingCreate
 from app.security import hash_password
@@ -578,6 +578,160 @@ async def get_user_search_history(
         select(SearchHistory)
         .where(SearchHistory.user_id == user_id)
         .order_by(SearchHistory.created_at.desc())
+        .limit(limit)
+    )
+    result = await db.execute(stmt)
+    return list(result.scalars().all())
+
+
+# ----- Analytics for charts -----
+async def get_bookings_by_day(db: AsyncSession, days: int = 30) -> list[dict]:
+    """Количество бронирований по дням (для графика)."""
+    from datetime import datetime, timedelta, timezone
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
+    since = now - timedelta(days=days)
+
+    stmt = (
+        select(
+            func.date(Booking.created_at).label("date"),
+            func.count(Booking.id).label("count"),
+            func.coalesce(func.sum(Booking.total_price), 0.0).label("revenue"),
+        )
+        .where(Booking.created_at >= since)
+        .group_by(func.date(Booking.created_at))
+        .order_by(func.date(Booking.created_at).asc())
+    )
+    result = await db.execute(stmt)
+    return [
+        {"date": str(row.date), "count": int(row.count), "revenue": float(row.revenue)}
+        for row in result.all()
+    ]
+
+
+async def get_avg_prices_by_route(db: AsyncSession, limit: int = 10) -> list[dict]:
+    """Средние цены по направлениям (для графика)."""
+    OriginCity = aliased(City)
+    DestCity = aliased(City)
+
+    stmt = (
+        select(
+            OriginCity.code.label("origin_code"),
+            OriginCity.name.label("origin_name"),
+            DestCity.code.label("destination_code"),
+            DestCity.name.label("destination_name"),
+            func.count(Flight.id).label("flights_count"),
+            func.round(func.avg(Flight.base_price), 2).label("avg_price"),
+            func.min(Flight.base_price).label("min_price"),
+            func.max(Flight.base_price).label("max_price"),
+        )
+        .select_from(Flight)
+        .join(OriginCity, OriginCity.id == Flight.origin_id)
+        .join(DestCity, DestCity.id == Flight.destination_id)
+        .where(Flight.is_active.is_(True))
+        .group_by(
+            OriginCity.code, OriginCity.name,
+            DestCity.code, DestCity.name,
+        )
+        .order_by(func.count(Flight.id).desc())
+        .limit(limit)
+    )
+    result = await db.execute(stmt)
+    return [dict(row._mapping) for row in result.all()]
+
+
+async def get_bookings_status_breakdown(db: AsyncSession) -> dict:
+    """Распределение бронирований по статусам (для pie chart)."""
+    stmt = (
+        select(
+            Booking.status.label("status"),
+            func.count(Booking.id).label("count"),
+        )
+        .group_by(Booking.status)
+    )
+    result = await db.execute(stmt)
+    return {row.status.value if hasattr(row.status, 'value') else str(row.status): int(row.count) for row in result.all()}
+
+
+# ----- Password reset -----
+async def create_password_reset_token(db: AsyncSession, user: User) -> str:
+    """Создаёт токен сброса пароля для пользователя (валиден 1 час)."""
+    import secrets as _secrets
+    from datetime import timedelta
+    token = _secrets.token_urlsafe(32)
+    reset = PasswordResetToken(
+        user_id=user.id,
+        token=token,
+        expires_at=datetime.now(timezone.utc).replace(tzinfo=None) + timedelta(hours=1),
+    )
+    db.add(reset)
+    await db.flush()
+    return token
+
+
+async def verify_password_reset_token(db: AsyncSession, token: str) -> User | None:
+    """Проверяет токен и возвращает пользователя, либо None."""
+    result = await db.execute(
+        select(PasswordResetToken).where(PasswordResetToken.token == token)
+    )
+    reset = result.scalar_one_or_none()
+    if not reset or reset.used:
+        return None
+    if reset.expires_at < datetime.now(timezone.utc).replace(tzinfo=None):
+        return None
+    user = await get_user_by_id(db, reset.user_id)
+    return user
+
+
+async def use_password_reset_token(db: AsyncSession, token: str, new_password: str) -> bool:
+    """Использует токен и меняет пароль пользователя."""
+    result = await db.execute(
+        select(PasswordResetToken).where(PasswordResetToken.token == token)
+    )
+    reset = result.scalar_one_or_none()
+    if not reset or reset.used:
+        return False
+    if reset.expires_at < datetime.now(timezone.utc).replace(tzinfo=None):
+        return False
+    user = await get_user_by_id(db, reset.user_id)
+    if not user:
+        return False
+    user.password_hash = hash_password(new_password)
+    reset.used = True
+    await db.flush()
+    return True
+
+
+# ----- Audit log -----
+async def log_admin_action(
+    db: AsyncSession,
+    *,
+    user: User,
+    action: str,
+    entity_type: str | None = None,
+    entity_id: int | None = None,
+    details: str | None = None,
+    ip_address: str | None = None,
+) -> AuditLog:
+    """Записывает действие администратора в аудит-лог."""
+    entry = AuditLog(
+        user_id=user.id,
+        user_email=user.email,
+        action=action,
+        entity_type=entity_type,
+        entity_id=entity_id,
+        details=details,
+        ip_address=ip_address,
+    )
+    db.add(entry)
+    await db.flush()
+    return entry
+
+
+async def get_audit_logs(db: AsyncSession, limit: int = 50) -> list[AuditLog]:
+    """Возвращает последние записи аудита."""
+    stmt = (
+        select(AuditLog)
+        .order_by(AuditLog.created_at.desc())
         .limit(limit)
     )
     result = await db.execute(stmt)

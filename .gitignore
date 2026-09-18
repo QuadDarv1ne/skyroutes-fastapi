@@ -52,3 +52,6 @@ htmlcov/
 
 # Docker
 docker-compose.override.yml
+
+# Архивы исходников
+*.zip

@@ -40,6 +40,24 @@
     </div>
 </section>
 
+<section class="admin-block">
+    <h2>📊 Аналитика</h2>
+    <div class="charts-grid">
+        <div class="chart-container">
+            <h3>Бронирования за 14 дней</h3>
+            <canvas id="bookingsChart" height="200"></canvas>
+        </div>
+        <div class="chart-container">
+            <h3>Статусы бронирований</h3>
+            <canvas id="statusChart" height="200"></canvas>
+        </div>
+        <div class="chart-container chart-wide">
+            <h3>Средние цены по направлениям</h3>
+            <canvas id="pricesChart" height="200"></canvas>
+        </div>
+    </div>
+</section>
+
 <div class="admin-grid">
     <section class="admin-block">
         <h2>Популярные направления</h2>
@@ -97,7 +115,111 @@
         <li><code>POST /api/admin/cities</code> — добавить город</li>
         <li><code>GET /api/admin/stats</code> — сводная статистика</li>
         <li><code>GET /api/admin/stats/extended</code> — с популярными направлениями</li>
+        <li><code>GET /api/admin/charts/bookings-by-day</code> — данные для графика (новый!)</li>
+        <li><code>GET /api/admin/charts/avg-prices</code> — средние цены (новый!)</li>
+        <li><code>GET /api/admin/charts/status-breakdown</code> — по статусам (новый!)</li>
     </ul>
     <p><a href="/docs" target="_blank" class="btn btn-primary btn-sm">Открыть Swagger UI →</a></p>
 </section>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+// Данные из Jinja2 в JS
+const bookingsByDay = {{ bookings_by_day | tojson }};
+const avgPrices = {{ avg_prices | tojson }};
+const statusBreakdown = {{ status_breakdown | tojson }};
+
+// График бронирований по дням (line)
+(function () {
+    const ctx = document.getElementById('bookingsChart');
+    if (!ctx || !bookingsByDay.length) return;
+
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: bookingsByDay.map(d => d.date),
+            datasets: [{
+                label: 'Бронирования',
+                data: bookingsByDay.map(d => d.count),
+                borderColor: '#1f5fff',
+                backgroundColor: 'rgba(31, 95, 255, 0.1)',
+                tension: 0.3,
+                fill: true,
+            }, {
+                label: 'Выручка (×1000 ₽)',
+                data: bookingsByDay.map(d => d.revenue / 1000),
+                borderColor: '#2ecc71',
+                backgroundColor: 'rgba(46, 204, 113, 0.1)',
+                tension: 0.3,
+                fill: true,
+                yAxisID: 'y1',
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { position: 'top' } },
+            scales: {
+                y: { beginAtZero: true, title: { display: true, text: 'Кол-во бронирований' } },
+                y1: { position: 'right', beginAtZero: true, title: { display: true, text: 'Выручка (×1000 ₽)' }, grid: { drawOnChartArea: false } }
+            }
+        }
+    });
+})();
+
+// Pie chart статусов
+(function () {
+    const ctx = document.getElementById('statusChart');
+    if (!ctx) return;
+    const labels = ['Pending', 'Confirmed', 'Cancelled'];
+    const data = [statusBreakdown.pending || 0, statusBreakdown.confirmed || 0, statusBreakdown.cancelled || 0];
+    if (data.every(d => d === 0)) return;
+
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: data,
+                backgroundColor: ['#ffc107', '#2ecc71', '#ff5a5f'],
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { position: 'bottom' } }
+        }
+    });
+})();
+
+// Bar chart средних цен
+(function () {
+    const ctx = document.getElementById('pricesChart');
+    if (!ctx || !avgPrices.length) return;
+    const labels = avgPrices.map(p => `${p.origin_code}→${p.destination_code}`);
+
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Мин. цена',
+                data: avgPrices.map(p => p.min_price),
+                backgroundColor: 'rgba(46, 204, 113, 0.7)',
+            }, {
+                label: 'Средняя цена',
+                data: avgPrices.map(p => p.avg_price),
+                backgroundColor: 'rgba(31, 95, 255, 0.7)',
+            }, {
+                label: 'Макс. цена',
+                data: avgPrices.map(p => p.max_price),
+                backgroundColor: 'rgba(255, 90, 95, 0.7)',
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { position: 'top' } },
+            scales: { y: { beginAtZero: true } }
+        }
+    });
+})();
+</script>
 {% endblock %}

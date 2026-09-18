@@ -212,3 +212,47 @@ class SearchHistory(Base):
 
     def __repr__(self) -> str:  # pragma: no cover
         return f"<SearchHistory {self.origin_code}->{self.destination_code}>"
+
+
+class PasswordResetToken(Base):
+    """Токен для сброса пароля (отправляется на email пользователя)."""
+    __tablename__ = "password_reset_tokens"
+    __table_args__ = (
+        Index("ix_reset_tokens_user", "user_id"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+    token: Mapped[str] = mapped_column(String(64), unique=True, index=True)
+    expires_at: Mapped[datetime] = mapped_column(DateTime)
+    used: Mapped[bool] = mapped_column(Boolean, default=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
+
+    user: Mapped["User"] = relationship()
+
+    def __repr__(self) -> str:  # pragma: no cover
+        return f"<PasswordResetToken user={self.user_id} used={self.used}>"
+
+
+class AuditLog(Base):
+    """Аудит-лог действий администраторов."""
+    __tablename__ = "audit_logs"
+    __table_args__ = (
+        Index("ix_audit_user_created", "user_id", "created_at"),
+        Index("ix_audit_action", "action"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int | None] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+    user_email: Mapped[str] = mapped_column(String(128))
+    action: Mapped[str] = mapped_column(String(64))
+    entity_type: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    entity_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    details: Mapped[str | None] = mapped_column(String(512), nullable=True)
+    ip_address: Mapped[str | None] = mapped_column(String(45), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
+
+    def __repr__(self) -> str:  # pragma: no cover
+        return f"<AuditLog {self.action} by {self.user_email}>"

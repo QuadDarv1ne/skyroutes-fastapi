@@ -101,3 +101,16 @@ function showToast(message, type = 'info', timeout = 3000) {
         }
     });
 })();
+
+// ---------- Переключение темы ----------
+(function () {
+    const toggle = document.getElementById('themeToggle');
+    if (!toggle) return;
+
+    toggle.addEventListener('click', () => {
+        const current = document.documentElement.getAttribute('data-theme');
+        const next = current === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        localStorage.setItem('theme', next);
+    });
+})();

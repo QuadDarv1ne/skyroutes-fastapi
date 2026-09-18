@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Аудит-лог — {{ settings.app_name }}{% endblock %}
+
+{% block content %}
+<div class="booking-header">
+    <a href="/admin" class="back-link">← В админку</a>
+    <h1 class="page-title">Аудит-лог</h1>
+</div>
+
+<section class="admin-block">
+    <h2>Последние действия администраторов</h2>
+    {% if logs %}
+    <table class="admin-table">
+        <thead>
+            <tr>
+                <th>Время</th>
+                <th>Админ</th>
+                <th>Действие</th>
+                <th>Объект</th>
+                <th>Детали</th>
+                <th>IP</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for log in logs %}
+            <tr>
+                <td>{{ log.created_at.strftime('%d.%m.%Y %H:%M') }}</td>
+                <td>{{ log.user_email }}</td>
+                <td><code>{{ log.action }}</code></td>
+                <td>
+                    {% if log.entity_type %}
+                    {{ log.entity_type }} #{{ log.entity_id }}
+                    {% else %}—{% endif %}
+                </td>
+                <td class="muted">{{ log.details or '—' }}</td>
+                <td class="muted">{{ log.ip_address or '—' }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p class="muted">Пока нет записей. Сделайте действие в админке — оно появится здесь.</p>
+    {% endif %}
+</section>
+{% endblock %}

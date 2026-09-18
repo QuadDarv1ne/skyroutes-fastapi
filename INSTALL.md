@@ -2,6 +2,13 @@
 
 Полное руководство по развёртыванию проекта SkyRoutes на FastAPI в разных окружениях: локально, через Docker, с PostgreSQL и в production.
 
+📚 **Дополнительная документация:**
+- [README.md](README.md) — общее описание проекта
+- [API.md](API.md) — подробная документация всех REST-эндпоинтов с примерами
+- [CHANGELOG.md](CHANGELOG.md) — история изменений по версиям
+- [CONTRIBUTING.md](CONTRIBUTING.md) — правила для контрибьюторов
+- [LICENSE](LICENSE) — MIT лицензия
+
 ---
 
 ## Содержание
@@ -18,7 +25,10 @@
 10. [Миграции БД через Alembic](#10-миграции-бд-через-alembic)
 11. [Запуск CI/CD через GitHub Actions](#11-запуск-cicd-через-github-actions)
 12. [Настройка pre-commit хуков](#12-настройка-pre-commit-хуков)
-13. [Решение проблем (Troubleshooting)](#13-решение-проблем-troubleshooting)
+13. [CLI-утилита manage.py](#13-cli-утилита-managepy)
+14. [Нагрузочное тестирование (locust)](#14-нагрузочное-тестирование-locust)
+15. [Dark mode](#15-dark-mode)
+16. [Решение проблем (Troubleshooting)](#16-решение-проблем-troubleshooting)
 
 ---
 
@@ -442,7 +452,230 @@ pre-commit run --files app/main.py
 
 ---
 
-## 13. Решение проблем (Troubleshooting)
+## 13. CLI-утилита manage.py
+
+В проекте есть CLI-утилита `scripts/manage.py` для управления через командную строку.
+
+### Создание администратора
+
+```bash
+python scripts/manage.py create-admin \
+  --email admin@example.com \
+  --password adminsecret \
+  --name "Admin User"
+```
+
+### Создание обычного пользователя
+
+```bash
+python scripts/manage.py create-user \
+  --email user@example.com \
+  --password userpassword \
+  --name "Regular User"
+```
+
+### Создание рейса
+
+```bash
+python scripts/manage.py create-flight \
+  --number SU9999 \
+  --airline "Аэрофлот" \
+  --aircraft "Airbus A350" \
+  --origin 1 \
+  --dest 3 \
+  --dep "2026-10-01T10:00" \
+  --arr "2026-10-01T13:00" \
+  --price 25000 \
+  --seats 200
+```
+
+### Сводная статистика
+
+```bash
+python scripts/manage.py stats
+```
+
+Вывод:
+```
+=== Сводная статистика SkyRoutes ===
+
+  Рейсы:           140 активных из 140
+  Бронирования:    42 всего
+    - pending:     5
+    - confirmed:   30
+    - cancelled:   7
+  Выручка:         850000.00 ₽
+    - в ожидании:  45000.00 ₽
+  Пассажиры:       50
+  Пользователи:    8
+  Города:          12
+
+=== Топ-5 популярных направлений ===
+
+  1. MOW → AER: 15 броней, 120000 ₽
+  ...
+```
+
+### Сброс базы данных
+
+```bash
+# С подтверждением
+python scripts/manage.py reset-db
+
+# Без подтверждения (для скриптов)
+python scripts/manage.py reset-db --yes
+```
+
+### Экспорт OpenAPI спецификации
+
+```bash
+python scripts/manage.py export-openapi --output openapi.json
+```
+
+Полезно для генерации клиентов на других языках (TypeScript, Java, Go и т.д.) через
+[openapi-generator](https://openapi-generator.tech/).
+
+### Список всех маршрутов
+
+```bash
+python scripts/manage.py list-routes
+```
+
+Выводит все 53+ маршрутов API с HTTP-методами.
+
+### Помощь
+
+```bash
+python scripts/manage.py --help
+python scripts/manage.py create-admin --help
+```
+
+---
+
+## 14. Нагрузочное тестирование (locust)
+
+Для проверки производительности проекта используется [locust](https://locust.io/).
+
+### Установка
+
+```bash
+pip install locust
+```
+
+### Запуск с веб-интерфейсом
+
+```bash
+# Сначала запусти приложение
+python run.py &
+
+# Запусти locust (откроется на http://localhost:8089)
+locust -f scripts/locustfile.py --host http://localhost:8000
+```
+
+В веб-интерфейсе задай:
+- Number of users: 50
+- Spawn rate: 5 (пользователей в секунду)
+- Host: http://localhost:8000
+
+### Запуск в headless-режиме
+
+```bash
+locust -f scripts/locustfile.py \
+    --headless \
+    --host http://localhost:8000 \
+    --users 50 \
+    --spawn-rate 5 \
+    --run-time 60s
+```
+
+### С CSV-отчётом
+
+```bash
+locust -f scripts/locustfile.py \
+    --headless \
+    --host http://localhost:8000 \
+    --users 100 \
+    --spawn-rate 10 \
+    --run-time 2m \
+    --csv results
+```
+
+Создаст файлы: `results_stats.csv`, `results_stats_history.csv`, `results_failures.csv`.
+
+### Сценарии в locustfile.py
+
+Файл `scripts/locustfile.py` содержит 2 класса пользователей:
+
+1. **`SkyRoutesUser`** — имитирует залогиненного пользователя:
+   - Просмотр главной, поиска, городов
+   - 30% шанс залогиниться как `demo@skyroutes.local`
+   - Просмотр своих броней, избранного, статистики
+   - Случайные фильтры и сортировки
+
+2. **`AnonymousBrowser`** (вес 2×) — просто листает страницы:
+   - Главная, поиск, about, login, register
+
+### Ожидаемые метрики (FastAPI + SQLite, обычный ноутбук)
+
+| Метрика | Целевое значение |
+|---|---|
+| RPS | 200-500 запросов/сек |
+| P50 latency | < 50ms |
+| P95 latency | < 200ms |
+| P99 latency | < 500ms |
+| Failures | < 1% |
+
+Для более тяжёлой нагрузки используй PostgreSQL и Gunicorn с 4+ workers:
+
+```bash
+gunicorn app.main:app -c gunicorn_conf.py -w 4 -k uvicorn.workers.UvicornWorker
+```
+
+---
+
+## 15. Dark mode
+
+В проекте есть переключатель темы (светлая/тёмная) — кнопка ☀/☾ в правом верхнем углу шапки.
+
+### Как работает
+
+- **CSS-переменные** в `:root` и `:root[data-theme="dark"]`
+- Кнопка `<button id="themeToggle">` в `base.html`
+- JavaScript в `app.js` переключает `data-theme` и сохраняет выбор в `localStorage`
+- Inline-скрипт в `<head>` применяет тему **до рендера**, чтобы избежать FOUC (flash of unstyled content)
+- Автоопределение системной темы через `window.matchMedia('(prefers-color-scheme: dark)')`
+
+### Тестирование
+
+1. Открой любую страницу
+2. Нажми кнопку ☀ (или ☾) в правом верхнем углу
+3. Тема должна переключиться мгновенно, без перезагрузки
+4. Перезагрузи страницу — тема должна сохраниться
+5. Измени системную тему — при первом заходе подхватится автоматически
+
+### Кастомизация
+
+Цвета тем настраиваются в `app/static/style.css`:
+
+```css
+:root {
+    --bg: #f5f7fb;
+    --surface: #ffffff;
+    --primary: #1f5fff;
+    /* ... */
+}
+
+:root[data-theme="dark"] {
+    --bg: #0e1726;
+    --surface: #1a2236;
+    --primary: #4d80ff;
+    /* ... */
+}
+```
+
+---
+
+## 16. Решение проблем (Troubleshooting)
 
 ### Проблема: `ModuleNotFoundError: No module named 'slowapi'`
 
@@ -573,16 +806,22 @@ curl -X POST http://localhost:8000/api/auth/register \
 | http://localhost:8000/flights | Поиск рейсов (с сортировкой) |
 | http://localhost:8000/login | Вход |
 | http://localhost:8000/register | Регистрация |
+| http://localhost:8000/reset | Сброс пароля (новое!) |
 | http://localhost:8000/profile | Профиль пользователя |
 | http://localhost:8000/favorites | Избранные рейсы |
 | http://localhost:8000/my-bookings | Мои бронирования |
 | http://localhost:8000/search-history | История поиска |
-| http://localhost:8000/admin | Админ-панель (для admin) |
+| http://localhost:8000/admin | Админ-панель с графиками (для admin) |
+| http://localhost:8000/admin/audit | Аудит-лог действий (новое!) |
 | http://localhost:8000/about | О проекте |
 | http://localhost:8000/docs | Swagger UI (REST API) |
 | http://localhost:8000/api/health | Health-check |
 | http://localhost:8000/api/health/detailed | Health-check с зависимостями |
 | http://localhost:8000/api/metrics | Метрики запросов |
+| http://localhost:8000/api/admin/charts/bookings-by-day | Данные графика бронирований |
+| http://localhost:8000/api/admin/charts/avg-prices | Средние цены по направлениям |
+| http://localhost:8000/api/admin/charts/status-breakdown | Распределение по статусам |
+| http://localhost:8000/api/admin/audit | Аудит-лог через API (новое!) |
 
 ---
 

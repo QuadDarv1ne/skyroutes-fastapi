@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /admin
+Disallow: /profile
+Disallow: /favorites
+Disallow: /my-bookings
+Disallow: /search-history
+
+Sitemap: /sitemap.xml

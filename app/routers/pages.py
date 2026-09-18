@@ -27,6 +27,10 @@ from app.crud import (
     get_user_by_email,
     get_user_favorites,
     get_user_search_history,
+    get_bookings_by_day,
+    get_avg_prices_by_route,
+    get_bookings_status_breakdown,
+    get_audit_logs,
     remove_favorite,
     update_booking_status,
 )
@@ -295,12 +299,20 @@ async def admin_dashboard(request: Request, db: AsyncSession = Depends(get_db)):
     airlines = await get_top_airlines(db, limit=5)
     cities = await get_cities(db)
 
+    # Данные для графиков
+    bookings_by_day = await get_bookings_by_day(db, days=14)
+    avg_prices = await get_avg_prices_by_route(db, limit=8)
+    status_breakdown = await get_bookings_status_breakdown(db)
+
     ctx = await base_context(request, db)
     ctx.update({
         "stats": stats,
         "popular_routes": popular,
         "top_airlines": airlines,
         "cities": cities,
+        "bookings_by_day": bookings_by_day,
+        "avg_prices": avg_prices,
+        "status_breakdown": status_breakdown,
     })
     return templates.TemplateResponse(request, "admin.html", ctx)
 
@@ -426,3 +438,30 @@ async def cancel_booking(
         url=f"/booking/{code}/view?toast={('Бронирование отменено')}&toast_type=error",
         status_code=303,
     )
+
+
+# ---------- Страница сброса пароля ----------
+@router.get("/reset", response_class=HTMLResponse, summary="Сброс пароля")
+async def reset_password_page(
+    request: Request,
+    token: str | None = None,
+    db: AsyncSession = Depends(get_db),
+):
+    """Страница запроса сброса пароля или установки нового (если есть ?token=)."""
+    ctx = await base_context(request, db)
+    ctx.update({"token": token})
+    return templates.TemplateResponse(request, "reset_password.html", ctx)
+
+
+# ---------- Страница аудит-лога ----------
+@router.get("/admin/audit", response_class=HTMLResponse, summary="Аудит-лог")
+async def audit_log_page(request: Request, db: AsyncSession = Depends(get_db)):
+    """Страница просмотра аудита действий администраторов."""
+    user = await get_user_from_request(request, db)
+    if not user or not user.is_admin:
+        raise HTTPException(status_code=403, detail="Admin access required")
+
+    logs = await get_audit_logs(db, limit=50)
+    ctx = await base_context(request, db)
+    ctx.update({"logs": logs})
+    return templates.TemplateResponse(request, "audit_log.html", ctx)

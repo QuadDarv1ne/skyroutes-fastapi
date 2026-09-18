@@ -13,7 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 # Изолированная тестовая БД в памяти (перед импортом app!)
 os.environ.setdefault("TRAVEL_SECRET_KEY", "test-secret-key-for-pytest-only")
 os.environ.setdefault("TRAVEL_DATABASE_URL", "sqlite+aiosqlite:///:memory:")
-os.environ.setdefault("TRAVEL_DEBUG", "False")
+os.environ.setdefault("TRAVEL_DEBUG", "True")  # нужно для password reset тестов
 
 from app.database import Base, get_db  # noqa: E402
 from app.main import app  # noqa: E402

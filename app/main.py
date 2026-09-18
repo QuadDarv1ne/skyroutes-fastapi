@@ -7,6 +7,7 @@ from pathlib import Path
 from fastapi import FastAPI, HTTPException, Request, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.templating import Jinja2Templates
 from slowapi import Limiter, _rate_limit_exceeded_handler
@@ -18,7 +19,7 @@ from app.config import settings
 from app.database import init_db
 from app.routers import (
     flights, bookings, cities, pages, auth, admin,
-    favorites, search_history,
+    favorites, search_history, password_reset,
 )
 
 
@@ -70,6 +71,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# ---------- GZip сжатие ----------
+# Сжимает ответы больше 500 байт (HTML, JSON) — экономит трафик
+app.add_middleware(GZipMiddleware, minimum_size=500)
+
 
 # ---------- Middleware логирования запросов ----------
 @app.middleware("http")
@@ -103,6 +108,7 @@ error_templates = Jinja2Templates(directory="app/templates")
 
 # Роутеры
 app.include_router(auth.router)
+app.include_router(password_reset.router)
 app.include_router(cities.router)
 app.include_router(flights.router)
 app.include_router(bookings.router)
@@ -222,15 +228,17 @@ async def api_root() -> dict:
         "version": settings.app_version,
         "endpoints": {
             "auth": "/api/auth/register, /api/auth/login, /api/auth/me",
+            "password_reset": "/api/auth/password-reset/request, /confirm (новое!)",
             "cities": "/api/cities",
             "flights_search": "/api/flights (+ sorting, pagination)",
             "booking_create": "/api/bookings",
             "my_bookings": "/api/bookings?email=...",
-            "favorites": "/api/favorites (new!)",
-            "search_history": "/api/search-history (new!)",
+            "favorites": "/api/favorites",
+            "search_history": "/api/search-history",
             "admin_stats": "/api/admin/stats",
             "admin_flights": "/api/admin/flights",
-            "metrics": "/api/metrics (new!)",
+            "admin_audit": "/api/admin/audit (новое!)",
+            "metrics": "/api/metrics",
             "docs": "/docs",
             "home_page": "/",
         },
