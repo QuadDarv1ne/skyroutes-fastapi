@@ -12,6 +12,7 @@
     cd /path/to/skyroutes
     python scripts/manage.py <command> [args]
 """
+
 from __future__ import annotations
 
 import argparse
@@ -42,7 +43,9 @@ async def cmd_create_admin(args):
         if existing:
             print(f"❌ Пользователь {args.email} уже существует")
             return 1
-        user = await create_user(db, args.email, args.password, args.name, is_admin=True)
+        user = await create_user(
+            db, args.email, args.password, args.name, is_admin=True
+        )
         await db.commit()
         print(f"✅ Создан администратор: {user.email} (id={user.id})")
     return 0
@@ -59,7 +62,9 @@ async def cmd_create_user(args):
         if existing:
             print(f"❌ Пользователь {args.email} уже существует")
             return 1
-        user = await create_user(db, args.email, args.password, args.name, is_admin=False)
+        user = await create_user(
+            db, args.email, args.password, args.name, is_admin=False
+        )
         await db.commit()
         print(f"✅ Создан пользователь: {user.email} (id={user.id})")
     return 0
@@ -104,7 +109,9 @@ async def cmd_stats(args):
     async with async_session_factory() as db:
         stats = await get_stats(db)
         print("\n=== Сводная статистика SkyRoutes ===\n")
-        print(f"  Рейсы:           {stats['flights_active']} активных из {stats['flights_total']}")
+        print(
+            f"  Рейсы:           {stats['flights_active']} активных из {stats['flights_total']}"
+        )
         print(f"  Бронирования:    {stats['bookings_total']} всего")
         print(f"    - pending:     {stats['bookings_pending']}")
         print(f"    - confirmed:   {stats['bookings_confirmed']}")
@@ -119,14 +126,18 @@ async def cmd_stats(args):
         if popular:
             print("\n=== Топ-5 популярных направлений ===\n")
             for i, r in enumerate(popular, 1):
-                print(f"  {i}. {r['origin_code']} → {r['destination_code']}: "
-                      f"{r['bookings_count']} броней, {r['revenue']:.0f} ₽")
+                print(
+                    f"  {i}. {r['origin_code']} → {r['destination_code']}: "
+                    f"{r['bookings_count']} броней, {r['revenue']:.0f} ₽"
+                )
 
         airlines = await get_top_airlines(db, limit=5)
         if airlines:
             print("\n=== Топ-5 авиакомпаний по выручке ===\n")
             for i, a in enumerate(airlines, 1):
-                print(f"  {i}. {a['airline']}: {a['bookings_count']} броней, {a['revenue']:.0f} ₽")
+                print(
+                    f"  {i}. {a['airline']}: {a['bookings_count']} броней, {a['revenue']:.0f} ₽"
+                )
     return 0
 
 
@@ -144,7 +155,9 @@ async def cmd_reset_db(args):
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)
-    print("✅ База данных пересоздана. Выполните `python -m app.seed` для заполнения тестовыми данными.")
+    print(
+        "✅ База данных пересоздана. Выполните `python -m app.seed` для заполнения тестовыми данными."
+    )
     return 0
 
 
@@ -154,7 +167,9 @@ def cmd_export_openapi(args):
 
     spec = app.openapi()
     output = args.output or "openapi.json"
-    Path(output).write_text(json.dumps(spec, indent=2, ensure_ascii=False), encoding="utf-8")
+    Path(output).write_text(
+        json.dumps(spec, indent=2, ensure_ascii=False), encoding="utf-8"
+    )
     print(f"✅ OpenAPI спецификация сохранена в {output} ({len(spec)} символов)")
     return 0
 
@@ -187,7 +202,9 @@ def main():
   python scripts/manage.py list-routes
 """,
     )
-    subparsers = parser.add_subparsers(dest="command", help="Доступные команды", required=True)
+    subparsers = parser.add_subparsers(
+        dest="command", help="Доступные команды", required=True
+    )
 
     # create-admin
     p_admin = subparsers.add_parser("create-admin", help="Создать администратора")
@@ -205,24 +222,38 @@ def main():
     p_flight = subparsers.add_parser("create-flight", help="Создать новый рейс")
     p_flight.add_argument("--number", required=True, help="Номер рейса (напр. SU9999)")
     p_flight.add_argument("--airline", required=True, help="Авиакомпания")
-    p_flight.add_argument("--aircraft", default=None, help="Тип судна (по умолч. Airbus A320)")
+    p_flight.add_argument(
+        "--aircraft", default=None, help="Тип судна (по умолч. Airbus A320)"
+    )
     p_flight.add_argument("--origin", type=int, required=True, help="ID города вылета")
     p_flight.add_argument("--dest", type=int, required=True, help="ID города прилёта")
-    p_flight.add_argument("--dep", required=True, help="Время вылета ISO (2026-10-01T10:00)")
+    p_flight.add_argument(
+        "--dep", required=True, help="Время вылета ISO (2026-10-01T10:00)"
+    )
     p_flight.add_argument("--arr", required=True, help="Время прилёта ISO")
     p_flight.add_argument("--price", type=float, required=True, help="Базовая цена")
-    p_flight.add_argument("--seats", type=int, default=180, help="Кол-во мест (по умолч. 180)")
+    p_flight.add_argument(
+        "--seats", type=int, default=180, help="Кол-во мест (по умолч. 180)"
+    )
 
     # stats
     subparsers.add_parser("stats", help="Показать сводную статистику")
 
     # reset-db
-    p_reset = subparsers.add_parser("reset-db", help="Удалить и пересоздать базу данных")
-    p_reset.add_argument("--yes", "-y", action="store_true", help="Не спрашивать подтверждение")
+    p_reset = subparsers.add_parser(
+        "reset-db", help="Удалить и пересоздать базу данных"
+    )
+    p_reset.add_argument(
+        "--yes", "-y", action="store_true", help="Не спрашивать подтверждение"
+    )
 
     # export-openapi
-    p_export = subparsers.add_parser("export-openapi", help="Экспорт OpenAPI спецификации в JSON")
-    p_export.add_argument("--output", "-o", default=None, help="Имя файла (по умолч. openapi.json)")
+    p_export = subparsers.add_parser(
+        "export-openapi", help="Экспорт OpenAPI спецификации в JSON"
+    )
+    p_export.add_argument(
+        "--output", "-o", default=None, help="Имя файла (по умолч. openapi.json)"
+    )
 
     # list-routes
     subparsers.add_parser("list-routes", help="Список всех маршрутов API")

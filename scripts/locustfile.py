@@ -24,6 +24,7 @@
         --run-time 2m \
         --csv results
 """
+
 from __future__ import annotations
 
 import random
@@ -70,7 +71,9 @@ class SkyRoutesUser(HttpUser):
         """Поиск рейсов с разными фильтрами."""
         params = {
             "limit": 10,
-            "sort_by": random.choice(["departure_at", "base_price", "duration_minutes"]),
+            "sort_by": random.choice(
+                ["departure_at", "base_price", "duration_minutes"]
+            ),
             "sort_order": random.choice(["asc", "desc"]),
         }
         # 50% шанс добавить фильтры

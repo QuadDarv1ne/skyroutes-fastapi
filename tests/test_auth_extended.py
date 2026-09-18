@@ -1,4 +1,5 @@
 """Тесты сброса пароля и аудита."""
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
@@ -10,7 +11,9 @@ from app.crud import create_user
 
 
 @pytest.mark.asyncio
-async def test_password_reset_request_for_existing_user(client, db_session: AsyncSession):
+async def test_password_reset_request_for_existing_user(
+    client, db_session: AsyncSession
+):
     """Запрос сброса для существующего email — 202 + в debug возвращает demo_reset_url."""
     await create_user(
         db_session,
@@ -20,9 +23,12 @@ async def test_password_reset_request_for_existing_user(client, db_session: Asyn
     )
     await db_session.commit()
 
-    r = await client.post("/api/auth/password-reset/request", json={
-        "email": "reset@example.com",
-    })
+    r = await client.post(
+        "/api/auth/password-reset/request",
+        json={
+            "email": "reset@example.com",
+        },
+    )
     assert r.status_code == 202
     data = r.json()
     assert "message" in data
@@ -34,15 +40,20 @@ async def test_password_reset_request_for_existing_user(client, db_session: Asyn
 @pytest.mark.asyncio
 async def test_password_reset_request_for_nonexistent_email(client):
     """Запрос для несуществующего email — тоже 202 (не раскрываем существование)."""
-    r = await client.post("/api/auth/password-reset/request", json={
-        "email": "nonexistent@example.com",
-    })
+    r = await client.post(
+        "/api/auth/password-reset/request",
+        json={
+            "email": "nonexistent@example.com",
+        },
+    )
     assert r.status_code == 202
     assert "message" in r.json()
 
 
 @pytest.mark.asyncio
-async def test_password_reset_confirm_with_valid_token(client, db_session: AsyncSession):
+async def test_password_reset_confirm_with_valid_token(
+    client, db_session: AsyncSession
+):
     """Полный цикл: запрос → использование токена → смена пароля → вход."""
     await create_user(
         db_session,
@@ -53,18 +64,24 @@ async def test_password_reset_confirm_with_valid_token(client, db_session: Async
     await db_session.commit()
 
     # Запрос токена
-    r = await client.post("/api/auth/password-reset/request", json={
-        "email": "fullcycle@example.com",
-    })
+    r = await client.post(
+        "/api/auth/password-reset/request",
+        json={
+            "email": "fullcycle@example.com",
+        },
+    )
     assert r.status_code == 202
     reset_url = r.json()["demo_reset_url"]
     token = reset_url.split("token=")[-1]
 
     # Установка нового пароля
-    r = await client.post("/api/auth/password-reset/confirm", json={
-        "token": token,
-        "new_password": "newpassword123",
-    })
+    r = await client.post(
+        "/api/auth/password-reset/confirm",
+        json={
+            "token": token,
+            "new_password": "newpassword123",
+        },
+    )
     assert r.status_code == 200
     assert "has been reset" in r.json()["message"]
 
@@ -80,10 +97,13 @@ async def test_password_reset_confirm_with_valid_token(client, db_session: Async
 @pytest.mark.asyncio
 async def test_password_reset_confirm_with_invalid_token(client):
     """Невалидный токен → 400."""
-    r = await client.post("/api/auth/password-reset/confirm", json={
-        "token": "invalid-token-does-not-exist-1234567890",
-        "new_password": "newpassword123",
-    })
+    r = await client.post(
+        "/api/auth/password-reset/confirm",
+        json={
+            "token": "invalid-token-does-not-exist-1234567890",
+            "new_password": "newpassword123",
+        },
+    )
     assert r.status_code == 400
     assert "Invalid or expired" in r.json()["detail"]
 
@@ -100,23 +120,32 @@ async def test_password_reset_confirm_with_used_token(client, db_session: AsyncS
     await db_session.commit()
 
     # Запрос токена
-    r = await client.post("/api/auth/password-reset/request", json={
-        "email": "used@example.com",
-    })
+    r = await client.post(
+        "/api/auth/password-reset/request",
+        json={
+            "email": "used@example.com",
+        },
+    )
     token = r.json()["demo_reset_url"].split("token=")[-1]
 
     # Первое использование — успех
-    r = await client.post("/api/auth/password-reset/confirm", json={
-        "token": token,
-        "new_password": "newpassword123",
-    })
+    r = await client.post(
+        "/api/auth/password-reset/confirm",
+        json={
+            "token": token,
+            "new_password": "newpassword123",
+        },
+    )
     assert r.status_code == 200
 
     # Второе использование — должно провалиться
-    r = await client.post("/api/auth/password-reset/confirm", json={
-        "token": token,
-        "new_password": "anotherpassword123",
-    })
+    r = await client.post(
+        "/api/auth/password-reset/confirm",
+        json={
+            "token": token,
+            "new_password": "anotherpassword123",
+        },
+    )
     assert r.status_code == 400
 
 
@@ -134,6 +163,7 @@ async def test_password_reset_page_html(client):
 
 
 # === Audit log tests ===
+
 
 async def _admin_token(client, db_session: AsyncSession) -> dict:
     """Создаёт админа и возвращает заголовки."""
@@ -168,9 +198,15 @@ async def test_admin_audit_records_actions(client, db_session: AsyncSession):
     headers = await _admin_token(client, db_session)
 
     # Создаём город (генерирует запись аудита)
-    r = await client.post("/api/admin/cities", headers=headers, json={
-        "code": "AUD", "name": "Аудит-Сити", "country": "Россия",
-    })
+    r = await client.post(
+        "/api/admin/cities",
+        headers=headers,
+        json={
+            "code": "AUD",
+            "name": "Аудит-Сити",
+            "country": "Россия",
+        },
+    )
     assert r.status_code == 201
 
     # Проверяем аудит
@@ -187,11 +223,14 @@ async def test_admin_audit_records_actions(client, db_session: AsyncSession):
 @pytest.mark.asyncio
 async def test_admin_audit_requires_admin(client, db_session: AsyncSession):
     """Обычный пользователь не может смотреть аудит."""
-    r = await client.post("/api/auth/register", json={
-        "email": "noaudit@example.com",
-        "password": "password123",
-        "full_name": "No Audit",
-    })
+    r = await client.post(
+        "/api/auth/register",
+        json={
+            "email": "noaudit@example.com",
+            "password": "password123",
+            "full_name": "No Audit",
+        },
+    )
     token = r.json()["access_token"]
     headers = {"Authorization": f"Bearer {token}"}
 
@@ -233,6 +272,7 @@ async def test_audit_logs_flight_crud(client, db_session: AsyncSession):
 
     # Создаём города
     from app.models import City
+
     origin = City(code="MOW", name="Москва", country="Россия")
     dest = City(code="LED", name="Санкт-Петербург", country="Россия")
     db_session.add_all([origin, dest])
@@ -242,23 +282,28 @@ async def test_audit_logs_flight_crud(client, db_session: AsyncSession):
 
     # Создаём рейс
     now = datetime.now(timezone.utc).replace(tzinfo=None)
-    r = await client.post("/api/admin/flights", headers=headers, json={
-        "flight_number": "AUD01",
-        "airline": "Test Air",
-        "aircraft": "A320",
-        "origin_id": origin.id,
-        "destination_id": dest.id,
-        "departure_at": (now + timedelta(days=1)).isoformat(),
-        "arrival_at": (now + timedelta(days=1, hours=2)).isoformat(),
-        "base_price": 5000.0,
-        "seats_total": 100,
-    })
+    r = await client.post(
+        "/api/admin/flights",
+        headers=headers,
+        json={
+            "flight_number": "AUD01",
+            "airline": "Test Air",
+            "aircraft": "A320",
+            "origin_id": origin.id,
+            "destination_id": dest.id,
+            "departure_at": (now + timedelta(days=1)).isoformat(),
+            "arrival_at": (now + timedelta(days=1, hours=2)).isoformat(),
+            "base_price": 5000.0,
+            "seats_total": 100,
+        },
+    )
     assert r.status_code == 201
     flight_id = r.json()["id"]
 
     # Обновляем рейс
     await client.patch(
-        f"/api/admin/flights/{flight_id}", headers=headers,
+        f"/api/admin/flights/{flight_id}",
+        headers=headers,
         json={"base_price": 6000.0},
     )
 

@@ -1,4 +1,5 @@
 """API сброса пароля: запрос токена и установка нового пароля."""
+
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status

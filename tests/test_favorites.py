@@ -1,4 +1,5 @@
 """Тесты избранных рейсов пользователя."""
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
@@ -45,11 +46,14 @@ async def test_add_and_list_favorite(client, db_session: AsyncSession):
     flight_id = await _seed_flight(db_session)
 
     # Регистрируем пользователя
-    r = await client.post("/api/auth/register", json={
-        "email": "fav@example.com",
-        "password": "favpass123",
-        "full_name": "Fav User",
-    })
+    r = await client.post(
+        "/api/auth/register",
+        json={
+            "email": "fav@example.com",
+            "password": "favpass123",
+            "full_name": "Fav User",
+        },
+    )
     token = r.json()["access_token"]
     headers = {"Authorization": f"Bearer {token}"}
 
@@ -72,11 +76,14 @@ async def test_add_and_list_favorite(client, db_session: AsyncSession):
 @pytest.mark.asyncio
 async def test_add_favorite_duplicate(client, db_session: AsyncSession):
     flight_id = await _seed_flight(db_session)
-    r = await client.post("/api/auth/register", json={
-        "email": "dup@example.com",
-        "password": "password123",
-        "full_name": "Dup User",
-    })
+    r = await client.post(
+        "/api/auth/register",
+        json={
+            "email": "dup@example.com",
+            "password": "password123",
+            "full_name": "Dup User",
+        },
+    )
     token = r.json()["access_token"]
     headers = {"Authorization": f"Bearer {token}"}
 
@@ -91,11 +98,14 @@ async def test_add_favorite_duplicate(client, db_session: AsyncSession):
 
 @pytest.mark.asyncio
 async def test_add_favorite_nonexistent_flight(client):
-    r = await client.post("/api/auth/register", json={
-        "email": "miss@example.com",
-        "password": "password123",
-        "full_name": "Miss User",
-    })
+    r = await client.post(
+        "/api/auth/register",
+        json={
+            "email": "miss@example.com",
+            "password": "password123",
+            "full_name": "Miss User",
+        },
+    )
     token = r.json()["access_token"]
     headers = {"Authorization": f"Bearer {token}"}
 
@@ -106,11 +116,14 @@ async def test_add_favorite_nonexistent_flight(client):
 @pytest.mark.asyncio
 async def test_remove_favorite(client, db_session: AsyncSession):
     flight_id = await _seed_flight(db_session)
-    r = await client.post("/api/auth/register", json={
-        "email": "remove@example.com",
-        "password": "password123",
-        "full_name": "Remove User",
-    })
+    r = await client.post(
+        "/api/auth/register",
+        json={
+            "email": "remove@example.com",
+            "password": "password123",
+            "full_name": "Remove User",
+        },
+    )
     token = r.json()["access_token"]
     headers = {"Authorization": f"Bearer {token}"}
 
@@ -128,11 +141,14 @@ async def test_remove_favorite(client, db_session: AsyncSession):
 
 @pytest.mark.asyncio
 async def test_remove_nonexistent_favorite(client):
-    r = await client.post("/api/auth/register", json={
-        "email": "rm-miss@example.com",
-        "password": "password123",
-        "full_name": "Rm Miss",
-    })
+    r = await client.post(
+        "/api/auth/register",
+        json={
+            "email": "rm-miss@example.com",
+            "password": "password123",
+            "full_name": "Rm Miss",
+        },
+    )
     token = r.json()["access_token"]
     headers = {"Authorization": f"Bearer {token}"}
 

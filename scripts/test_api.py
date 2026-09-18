@@ -2,6 +2,7 @@
 
 Сам поднимает uvicorn, прогоняет все сценарии, выводит отчёт.
 """
+
 from __future__ import annotations
 
 import os
@@ -40,8 +41,16 @@ def main():
         test_db.unlink()
 
     proc = subprocess.Popen(
-        [str(PROJECT / ".venv/bin/uvicorn"), "app.main:app",
-         "--host", "127.0.0.1", "--port", "8000", "--log-level", "warning"],
+        [
+            str(PROJECT / ".venv/bin/uvicorn"),
+            "app.main:app",
+            "--host",
+            "127.0.0.1",
+            "--port",
+            "8000",
+            "--log-level",
+            "warning",
+        ],
         cwd=str(PROJECT),
         env=env,
         stdout=subprocess.PIPE,
@@ -59,7 +68,9 @@ def main():
         # Заполняем БД
         subprocess.run(
             [str(PROJECT / ".venv/bin/python"), "-m", "app.seed"],
-            cwd=str(PROJECT), env=env, check=True,
+            cwd=str(PROJECT),
+            env=env,
+            check=True,
             capture_output=True,
         )
 
@@ -77,8 +88,17 @@ def main():
         check("health 200", r.status_code == 200)
 
         print("\n=== HTML pages ===")
-        for path in ["/", "/login", "/register", "/my-bookings", "/flights",
-                     "/booking/1", "/about", "/contacts", "/docs"]:
+        for path in [
+            "/",
+            "/login",
+            "/register",
+            "/my-bookings",
+            "/flights",
+            "/booking/1",
+            "/about",
+            "/contacts",
+            "/docs",
+        ]:
             r = requests.get(f"{BASE}{path}", allow_redirects=False)
             check(f"GET {path:25} → 200", r.status_code == 200)
 
@@ -91,12 +111,22 @@ def main():
         check("API 404 returns JSON", r.status_code == 404 and "detail" in r.json())
 
         print("\n=== Register duplicate (409) ===")
-        requests.post(f"{BASE}/api/auth/register", json={
-            "email": "tester@example.com", "password": "tester1234", "full_name": "T"
-        })
-        r = requests.post(f"{BASE}/api/auth/register", json={
-            "email": "tester@example.com", "password": "tester1234", "full_name": "T"
-        })
+        requests.post(
+            f"{BASE}/api/auth/register",
+            json={
+                "email": "tester@example.com",
+                "password": "tester1234",
+                "full_name": "T",
+            },
+        )
+        r = requests.post(
+            f"{BASE}/api/auth/register",
+            json={
+                "email": "tester@example.com",
+                "password": "tester1234",
+                "full_name": "T",
+            },
+        )
         check("duplicate 409", r.status_code == 409)
 
         print("\n=== Login as demo admin ===")
@@ -114,10 +144,16 @@ def main():
         check("me is_admin True", r.json().get("is_admin") is True)
 
         print("\n=== Flights search + sorting ===")
-        r = requests.get(f"{BASE}/api/flights", params={
-            "origin": "MOW", "destination": "AER", "limit": 5,
-            "sort_by": "base_price", "sort_order": "asc",
-        })
+        r = requests.get(
+            f"{BASE}/api/flights",
+            params={
+                "origin": "MOW",
+                "destination": "AER",
+                "limit": 5,
+                "sort_by": "base_price",
+                "sort_order": "asc",
+            },
+        )
         check("flights search 200", r.status_code == 200)
         flights = r.json()
         check("flights found > 0", len(flights) > 0)
@@ -144,20 +180,25 @@ def main():
         mow_id = next(c["id"] for c in cities if c["code"] == "MOW")
         aer_id = next(c["id"] for c in cities if c["code"] == "AER")
         from datetime import datetime, timedelta, timezone
+
         now = datetime.now(timezone.utc).replace(tzinfo=None)
         dep = (now + timedelta(days=10)).isoformat()
         arr = (now + timedelta(days=10, hours=3)).isoformat()
-        r = requests.post(f"{BASE}/api/admin/flights", headers=admin_headers, json={
-            "flight_number": "TEST01",
-            "airline": "Test Air",
-            "aircraft": "B777",
-            "origin_id": mow_id,
-            "destination_id": aer_id,
-            "departure_at": dep,
-            "arrival_at": arr,
-            "base_price": 9999.0,
-            "seats_total": 200,
-        })
+        r = requests.post(
+            f"{BASE}/api/admin/flights",
+            headers=admin_headers,
+            json={
+                "flight_number": "TEST01",
+                "airline": "Test Air",
+                "aircraft": "B777",
+                "origin_id": mow_id,
+                "destination_id": aer_id,
+                "departure_at": dep,
+                "arrival_at": arr,
+                "base_price": 9999.0,
+                "seats_total": 200,
+            },
+        )
         check("create flight 201", r.status_code == 201)
         new_flight_id = r.json()["id"] if r.status_code == 201 else None
 
@@ -180,21 +221,31 @@ def main():
             check("delete flight 204", r.status_code == 204)
 
         print("\n=== Admin: create city ===")
-        r = requests.post(f"{BASE}/api/admin/cities", headers=admin_headers, json={
-            "code": "KRR", "name": "Краснодар", "country": "Россия",
-        })
+        r = requests.post(
+            f"{BASE}/api/admin/cities",
+            headers=admin_headers,
+            json={
+                "code": "KRR",
+                "name": "Краснодар",
+                "country": "Россия",
+            },
+        )
         check("create city 201", r.status_code == 201)
 
         print("\n=== Admin page (logged in) ===")
         # Логин через HTML-форму (cookie)
         s = requests.Session()
-        s.post(f"{BASE}/login", data={
-            "email": "demo@skyroutes.local", "password": "demo1234"
-        }, allow_redirects=False)
+        s.post(
+            f"{BASE}/login",
+            data={"email": "demo@skyroutes.local", "password": "demo1234"},
+            allow_redirects=False,
+        )
         r = s.get(f"{BASE}/admin", allow_redirects=False)
         check("admin page 200 for admin user", r.status_code == 200)
-        check("admin page shows stats",
-              "Рейсы" in r.text or "Выручка" in r.text or "flights" in r.text.lower())
+        check(
+            "admin page shows stats",
+            "Рейсы" in r.text or "Выручка" in r.text or "flights" in r.text.lower(),
+        )
 
         print("\n=== Booking workflow ===")
         r = requests.get(f"{BASE}/api/flights", params={"limit": 1})
@@ -207,11 +258,15 @@ def main():
                     "flight_id": fid,
                     "contact_email": "tester@example.com",
                     "contact_phone": "+79991234567",
-                    "passengers": [{
-                        "first_name": "Alice", "last_name": "Wonder",
-                        "birth_date": "1990-01-01", "passport_number": "12345678",
-                        "cabin_class": "business",
-                    }],
+                    "passengers": [
+                        {
+                            "first_name": "Alice",
+                            "last_name": "Wonder",
+                            "birth_date": "1990-01-01",
+                            "passport_number": "12345678",
+                            "cabin_class": "business",
+                        }
+                    ],
                 },
             )
             check("create booking 201", r.status_code == 201)
@@ -220,8 +275,9 @@ def main():
                 r = requests.get(f"{BASE}/api/bookings/{code}", headers=admin_headers)
                 check("get booking 200", r.status_code == 200)
                 r = requests.patch(
-                    f"{BASE}/api/bookings/{code}", headers=admin_headers,
-                    json={"status": "cancelled"}
+                    f"{BASE}/api/bookings/{code}",
+                    headers=admin_headers,
+                    json={"status": "cancelled"},
                 )
                 check("cancel 200", r.status_code == 200)
 
@@ -242,8 +298,7 @@ def main():
 
         print("\n=== X-Total-Count header ===")
         r = requests.get(f"{BASE}/api/flights", params={"limit": 2})
-        check("X-Total-Count header present",
-              "X-Total-Count" in r.headers)
+        check("X-Total-Count header present", "X-Total-Count" in r.headers)
         total = int(r.headers.get("X-Total-Count", 0))
         check("X-Total-Count > 0", total > 0)
 
@@ -282,9 +337,14 @@ def main():
 
         print("\n=== Search history ===")
         # Делаем поиск с фильтрами
-        r = requests.get(f"{BASE}/api/flights", params={
-            "origin": "MOW", "destination": "AER",
-        }, headers=admin_headers)
+        r = requests.get(
+            f"{BASE}/api/flights",
+            params={
+                "origin": "MOW",
+                "destination": "AER",
+            },
+            headers=admin_headers,
+        )
         check("filtered search 200", r.status_code == 200)
 
         # Проверяем историю
@@ -301,15 +361,19 @@ def main():
         check("health/detailed 200", r.status_code == 200)
         data = r.json()
         check("has dependencies", "dependencies" in data)
-        check("database status ok",
-              data.get("dependencies", {}).get("database", {}).get("status") == "ok")
+        check(
+            "database status ok",
+            data.get("dependencies", {}).get("database", {}).get("status") == "ok",
+        )
 
         print("\n=== Profile page (HTML) ===")
         # Логинимся через HTML-форму
         s = requests.Session()
-        s.post(f"{BASE}/login", data={
-            "email": "demo@skyroutes.local", "password": "demo1234"
-        }, allow_redirects=False)
+        s.post(
+            f"{BASE}/login",
+            data={"email": "demo@skyroutes.local", "password": "demo1234"},
+            allow_redirects=False,
+        )
 
         r = s.get(f"{BASE}/profile", allow_redirects=False)
         check("profile page 200", r.status_code == 200)
@@ -335,11 +399,15 @@ def main():
                     "flight_id": fid,
                     "contact_email": "demo@skyroutes.local",
                     "contact_phone": "+79991234567",
-                    "passengers": [{
-                        "first_name": "Test", "last_name": "User",
-                        "birth_date": "1990-01-01", "passport_number": "12345678",
-                        "cabin_class": "economy",
-                    }],
+                    "passengers": [
+                        {
+                            "first_name": "Test",
+                            "last_name": "User",
+                            "birth_date": "1990-01-01",
+                            "passport_number": "12345678",
+                            "cabin_class": "economy",
+                        }
+                    ],
                 },
             )
             if r.status_code == 201:
@@ -350,18 +418,14 @@ def main():
                 check("confirm booking 303", r.status_code == 303)
 
                 # Проверяем статус
-                r = requests.get(
-                    f"{BASE}/api/bookings/{code}", headers=admin_headers
-                )
+                r = requests.get(f"{BASE}/api/bookings/{code}", headers=admin_headers)
                 check("booking confirmed", r.json().get("status") == "confirmed")
 
                 # Отменяем
                 r = s.post(f"{BASE}/booking/{code}/cancel", allow_redirects=False)
                 check("cancel booking 303", r.status_code == 303)
 
-                r = requests.get(
-                    f"{BASE}/api/bookings/{code}", headers=admin_headers
-                )
+                r = requests.get(f"{BASE}/api/bookings/{code}", headers=admin_headers)
                 check("booking cancelled", r.json().get("status") == "cancelled")
 
         print("\n" + "=" * 50)

@@ -1,4 +1,5 @@
 """Pydantic-схемы для API."""
+
 from __future__ import annotations
 
 from datetime import datetime, date
@@ -26,8 +27,12 @@ class FlightRead(BaseModel):
     flight_number: str
     airline: str
     aircraft: str
-    origin: CityRead = Field(serialization_alias="origin", validation_alias="origin_city")
-    destination: CityRead = Field(serialization_alias="destination", validation_alias="destination_city")
+    origin: CityRead = Field(
+        serialization_alias="origin", validation_alias="origin_city"
+    )
+    destination: CityRead = Field(
+        serialization_alias="destination", validation_alias="destination_city"
+    )
     departure_at: datetime
     arrival_at: datetime
     duration_minutes: int
@@ -40,6 +45,7 @@ class FlightRead(BaseModel):
 
 class FlightSearchParams(BaseModel):
     """Параметры поиска рейсов."""
+
     origin_code: Optional[str] = Field(None, description="IATA-код города вылета")
     destination_code: Optional[str] = Field(None, description="IATA-код города прилёта")
     date_from: Optional[date] = None
@@ -51,6 +57,7 @@ class FlightSearchParams(BaseModel):
 
 class FlightCreate(BaseModel):
     """Создание рейса (для админ-API)."""
+
     flight_number: str = Field(..., min_length=3, max_length=10)
     airline: str = Field(..., min_length=2, max_length=128)
     aircraft: str = Field("Airbus A320", max_length=64)
@@ -65,6 +72,7 @@ class FlightCreate(BaseModel):
 
 class FlightUpdate(BaseModel):
     """Частичное обновление рейса (для админ-API)."""
+
     airline: Optional[str] = Field(None, min_length=2, max_length=128)
     aircraft: Optional[str] = Field(None, max_length=64)
     base_price: Optional[float] = Field(None, gt=0)
@@ -84,6 +92,7 @@ class CityCreate(BaseModel):
 # ----- Statistics -----
 class StatsResponse(BaseModel):
     """Сводная статистика для админ-панели."""
+
     flights_total: int
     flights_active: int
     bookings_total: int
@@ -108,6 +117,7 @@ class PopularRoute(BaseModel):
 
 class StatsResponseExtended(BaseModel):
     """Расширенная статистика с популярными направлениями."""
+
     basic: StatsResponse
     popular_routes: list[PopularRoute]
     top_airlines: list[dict]

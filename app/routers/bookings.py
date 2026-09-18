@@ -1,4 +1,5 @@
 """API бронирований: создание, просмотр, изменение статуса, мои бронирования."""
+
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -20,7 +21,9 @@ from app.security import get_current_user, require_user
 router = APIRouter(prefix="/api/bookings", tags=["bookings"])
 
 
-@router.post("", response_model=BookingRead, status_code=201, summary="Создать бронирование")
+@router.post(
+    "", response_model=BookingRead, status_code=201, summary="Создать бронирование"
+)
 async def book_flight(
     payload: BookingCreate,
     db: AsyncSession = Depends(get_db),
@@ -44,7 +47,9 @@ async def get_booking(code: str, db: AsyncSession = Depends(get_db)) -> BookingR
     return BookingRead.model_validate(booking)
 
 
-@router.patch("/{code}", response_model=BookingRead, summary="Изменить статус бронирования")
+@router.patch(
+    "/{code}", response_model=BookingRead, summary="Изменить статус бронирования"
+)
 async def patch_booking_status(
     code: str, payload: BookingStatusUpdate, db: AsyncSession = Depends(get_db)
 ) -> BookingRead:

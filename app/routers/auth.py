@@ -1,4 +1,5 @@
 """API аутентификации: регистрация, логин, текущий пользователь."""
+
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -15,8 +16,12 @@ from app.security import create_access_token, get_current_user, verify_password
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
 
-@router.post("/register", response_model=TokenPair, status_code=201, summary="Регистрация")
-async def register(payload: UserCreate, db: AsyncSession = Depends(get_db)) -> TokenPair:
+@router.post(
+    "/register", response_model=TokenPair, status_code=201, summary="Регистрация"
+)
+async def register(
+    payload: UserCreate, db: AsyncSession = Depends(get_db)
+) -> TokenPair:
     existing = await get_user_by_email(db, payload.email)
     if existing:
         raise HTTPException(
@@ -25,7 +30,9 @@ async def register(payload: UserCreate, db: AsyncSession = Depends(get_db)) -> T
         )
     user = await create_user(db, payload.email, payload.password, payload.full_name)
     await db.commit()
-    token = create_access_token(user.id, extra={"email": user.email, "admin": user.is_admin})
+    token = create_access_token(
+        user.id, extra={"email": user.email, "admin": user.is_admin}
+    )
     return TokenPair(access_token=token, user=UserRead.model_validate(user))
 
 
@@ -41,7 +48,9 @@ async def login(
             detail="Invalid email or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    token = create_access_token(user.id, extra={"email": user.email, "admin": user.is_admin})
+    token = create_access_token(
+        user.id, extra={"email": user.email, "admin": user.is_admin}
+    )
     return TokenPair(access_token=token, user=UserRead.model_validate(user))
 
 

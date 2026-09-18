@@ -1,4 +1,5 @@
 """Тесты бронирований: создание, просмотр, отмена."""
+
 import pytest
 from datetime import datetime, timedelta, timezone
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -34,18 +35,23 @@ async def _create_flight(db: AsyncSession) -> int:
 @pytest.mark.asyncio
 async def test_create_booking(client, db_session: AsyncSession):
     flight_id = await _create_flight(db_session)
-    r = await client.post("/api/bookings", json={
-        "flight_id": flight_id,
-        "contact_email": "ivan@example.com",
-        "contact_phone": "+79991234567",
-        "passengers": [{
-            "first_name": "Иван",
-            "last_name": "Петров",
-            "birth_date": "1990-05-12",
-            "passport_number": "4510123456",
-            "cabin_class": "economy",
-        }],
-    })
+    r = await client.post(
+        "/api/bookings",
+        json={
+            "flight_id": flight_id,
+            "contact_email": "ivan@example.com",
+            "contact_phone": "+79991234567",
+            "passengers": [
+                {
+                    "first_name": "Иван",
+                    "last_name": "Петров",
+                    "birth_date": "1990-05-12",
+                    "passport_number": "4510123456",
+                    "cabin_class": "economy",
+                }
+            ],
+        },
+    )
     assert r.status_code == 201
     data = r.json()
     assert len(data["code"]) == 6
@@ -57,16 +63,23 @@ async def test_create_booking(client, db_session: AsyncSession):
 @pytest.mark.asyncio
 async def test_get_booking_by_code(client, db_session: AsyncSession):
     flight_id = await _create_flight(db_session)
-    create = await client.post("/api/bookings", json={
-        "flight_id": flight_id,
-        "contact_email": "alice@example.com",
-        "contact_phone": "+79991234567",
-        "passengers": [{
-            "first_name": "A", "last_name": "B",
-            "birth_date": "2000-01-01", "passport_number": "12345678",
-            "cabin_class": "business",
-        }],
-    })
+    create = await client.post(
+        "/api/bookings",
+        json={
+            "flight_id": flight_id,
+            "contact_email": "alice@example.com",
+            "contact_phone": "+79991234567",
+            "passengers": [
+                {
+                    "first_name": "A",
+                    "last_name": "B",
+                    "birth_date": "2000-01-01",
+                    "passport_number": "12345678",
+                    "cabin_class": "business",
+                }
+            ],
+        },
+    )
     code = create.json()["code"]
     r = await client.get(f"/api/bookings/{code}")
     assert r.status_code == 200
@@ -76,16 +89,23 @@ async def test_get_booking_by_code(client, db_session: AsyncSession):
 @pytest.mark.asyncio
 async def test_cancel_booking(client, db_session: AsyncSession):
     flight_id = await _create_flight(db_session)
-    create = await client.post("/api/bookings", json={
-        "flight_id": flight_id,
-        "contact_email": "bob@example.com",
-        "contact_phone": "+79991234567",
-        "passengers": [{
-            "first_name": "A", "last_name": "B",
-            "birth_date": "2000-01-01", "passport_number": "12345678",
-            "cabin_class": "economy",
-        }],
-    })
+    create = await client.post(
+        "/api/bookings",
+        json={
+            "flight_id": flight_id,
+            "contact_email": "bob@example.com",
+            "contact_phone": "+79991234567",
+            "passengers": [
+                {
+                    "first_name": "A",
+                    "last_name": "B",
+                    "birth_date": "2000-01-01",
+                    "passport_number": "12345678",
+                    "cabin_class": "economy",
+                }
+            ],
+        },
+    )
     code = create.json()["code"]
     r = await client.patch(f"/api/bookings/{code}", json={"status": "cancelled"})
     assert r.status_code == 200

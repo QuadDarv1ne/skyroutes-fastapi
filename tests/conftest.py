@@ -1,4 +1,5 @@
 """Конфигурация pytest: фикстуры для асинхронного тестирования FastAPI."""
+
 from __future__ import annotations
 
 import asyncio
@@ -49,7 +50,9 @@ async def client(db_engine) -> AsyncGenerator[AsyncClient, None]:
     """HTTP-клиент с переопределённой зависимостью get_db."""
 
     async def override_get_db():
-        factory = async_sessionmaker(db_engine, class_=AsyncSession, expire_on_commit=False)
+        factory = async_sessionmaker(
+            db_engine, class_=AsyncSession, expire_on_commit=False
+        )
         async with factory() as session:
             try:
                 yield session

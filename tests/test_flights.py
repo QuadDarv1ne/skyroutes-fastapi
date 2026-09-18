@@ -1,4 +1,5 @@
 """Тесты городов и рейсов."""
+
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -55,22 +56,40 @@ async def test_flights_filter_by_price(db_session: AsyncSession):
     await db_session.flush()
 
     now = datetime.now(timezone.utc).replace(tzinfo=None)
-    db_session.add_all([
-        Flight(
-            flight_number="SU1", airline="X", aircraft="A320",
-            origin_id=origin.id, destination_id=dest.id,
-            departure_at=now, arrival_at=now + timedelta(hours=3),
-            duration_minutes=180, base_price=5000.0, seats_total=180, seats_available=180,
-        ),
-        Flight(
-            flight_number="SU2", airline="Y", aircraft="B737",
-            origin_id=origin.id, destination_id=dest.id,
-            departure_at=now, arrival_at=now + timedelta(hours=3),
-            duration_minutes=180, base_price=15000.0, seats_total=180, seats_available=180,
-        ),
-    ])
+    db_session.add_all(
+        [
+            Flight(
+                flight_number="SU1",
+                airline="X",
+                aircraft="A320",
+                origin_id=origin.id,
+                destination_id=dest.id,
+                departure_at=now,
+                arrival_at=now + timedelta(hours=3),
+                duration_minutes=180,
+                base_price=5000.0,
+                seats_total=180,
+                seats_available=180,
+            ),
+            Flight(
+                flight_number="SU2",
+                airline="Y",
+                aircraft="B737",
+                origin_id=origin.id,
+                destination_id=dest.id,
+                departure_at=now,
+                arrival_at=now + timedelta(hours=3),
+                duration_minutes=180,
+                base_price=15000.0,
+                seats_total=180,
+                seats_available=180,
+            ),
+        ]
+    )
     await db_session.commit()
 
-    cheap = await get_flights(db_session, origin_code="MOW", destination_code="AER", max_price=10000)
+    cheap = await get_flights(
+        db_session, origin_code="MOW", destination_code="AER", max_price=10000
+    )
     assert len(cheap) == 1
     assert cheap[0].flight_number == "SU1"

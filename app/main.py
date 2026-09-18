@@ -1,4 +1,5 @@
 """FastAPI приложение: точки входа, статика, middleware, события жизненного цикла."""
+
 import logging
 import time
 from contextlib import asynccontextmanager
@@ -18,8 +19,15 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from app.config import settings
 from app.database import init_db
 from app.routers import (
-    flights, bookings, cities, pages, auth, admin,
-    favorites, search_history, password_reset,
+    flights,
+    bookings,
+    cities,
+    pages,
+    auth,
+    admin,
+    favorites,
+    search_history,
+    password_reset,
 )
 
 
@@ -41,7 +49,9 @@ async def lifespan(app: FastAPI):
     """Создаём таблицы при старте приложения (для разработки)."""
     logger.info("Initializing database...")
     await init_db()
-    logger.info("SkyRoutes app started: %s v%s", settings.app_name, settings.app_version)
+    logger.info(
+        "SkyRoutes app started: %s v%s", settings.app_name, settings.app_version
+    )
     yield
     logger.info("SkyRoutes app shutting down")
 
@@ -101,7 +111,9 @@ async def log_requests(request: Request, call_next):
 
 
 # ---------- Статика ----------
-app.mount("/static", StaticFiles(directory=Path(__file__).parent / "static"), name="static")
+app.mount(
+    "/static", StaticFiles(directory=Path(__file__).parent / "static"), name="static"
+)
 
 # Шаблоны для страниц ошибок
 error_templates = Jinja2Templates(directory="app/templates")
@@ -122,7 +134,9 @@ app.include_router(pages.router)
 @app.exception_handler(StarletteHTTPException)
 async def http_exception_handler(request: Request, exc: StarletteHTTPException):
     """Кастомная обработка HTTP-ошибок (404, 403, ...)."""
-    if request.url.path.startswith("/api/") or "application/json" in request.headers.get("accept", ""):
+    if request.url.path.startswith(
+        "/api/"
+    ) or "application/json" in request.headers.get("accept", ""):
         return JSONResponse(
             status_code=exc.status_code,
             content={"detail": exc.detail, "status_code": exc.status_code},

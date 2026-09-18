@@ -3,6 +3,7 @@
 Запуск:
     python -m app.seed
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -17,17 +18,52 @@ from app.security import hash_password
 
 CITIES = [
     {"code": "MOW", "name": "Москва", "country": "Россия", "timezone": "Europe/Moscow"},
-    {"code": "LED", "name": "Санкт-Петербург", "country": "Россия", "timezone": "Europe/Moscow"},
+    {
+        "code": "LED",
+        "name": "Санкт-Петербург",
+        "country": "Россия",
+        "timezone": "Europe/Moscow",
+    },
     {"code": "AER", "name": "Сочи", "country": "Россия", "timezone": "Europe/Moscow"},
     {"code": "KZN", "name": "Казань", "country": "Россия", "timezone": "Europe/Moscow"},
-    {"code": "SVX", "name": "Екатеринбург", "country": "Россия", "timezone": "Asia/Yekaterinburg"},
-    {"code": "NSK", "name": "Новосибирск", "country": "Россия", "timezone": "Asia/Novosibirsk"},
-    {"code": "IST", "name": "Стамбул", "country": "Турция", "timezone": "Europe/Istanbul"},
+    {
+        "code": "SVX",
+        "name": "Екатеринбург",
+        "country": "Россия",
+        "timezone": "Asia/Yekaterinburg",
+    },
+    {
+        "code": "NSK",
+        "name": "Новосибирск",
+        "country": "Россия",
+        "timezone": "Asia/Novosibirsk",
+    },
+    {
+        "code": "IST",
+        "name": "Стамбул",
+        "country": "Турция",
+        "timezone": "Europe/Istanbul",
+    },
     {"code": "DXB", "name": "Дубай", "country": "ОАЭ", "timezone": "Asia/Dubai"},
-    {"code": "LHR", "name": "Лондон", "country": "Великобритания", "timezone": "Europe/London"},
+    {
+        "code": "LHR",
+        "name": "Лондон",
+        "country": "Великобритания",
+        "timezone": "Europe/London",
+    },
     {"code": "CDG", "name": "Париж", "country": "Франция", "timezone": "Europe/Paris"},
-    {"code": "BCN", "name": "Барселона", "country": "Испания", "timezone": "Europe/Madrid"},
-    {"code": "JFK", "name": "Нью-Йорк", "country": "США", "timezone": "America/New_York"},
+    {
+        "code": "BCN",
+        "name": "Барселона",
+        "country": "Испания",
+        "timezone": "Europe/Madrid",
+    },
+    {
+        "code": "JFK",
+        "name": "Нью-Йорк",
+        "country": "США",
+        "timezone": "America/New_York",
+    },
 ]
 
 
@@ -81,7 +117,9 @@ async def seed() -> None:
         )
         existing_numbers = set(existing_flights)
 
-        base = datetime.now(timezone.utc).replace(hour=8, minute=0, second=0, microsecond=0)
+        base = datetime.now(timezone.utc).replace(
+            hour=8, minute=0, second=0, microsecond=0
+        )
         new_flights: list[Flight] = []
 
         for i, (orig, dest, airline, aircraft, dur, price) in enumerate(ROUTES):

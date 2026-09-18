@@ -1,4 +1,5 @@
 """Конфигурация приложения."""
+
 from pathlib import Path
 
 from pydantic import AliasChoices, Field
@@ -58,7 +59,9 @@ class Settings(BaseSettings):
     )
     access_token_expire_minutes: int = Field(
         default=60 * 24,
-        validation_alias=AliasChoices("TRAVEL_ACCESS_TOKEN_EXPIRE_MINUTES", "ACCESS_TOKEN_EXPIRE_MINUTES"),
+        validation_alias=AliasChoices(
+            "TRAVEL_ACCESS_TOKEN_EXPIRE_MINUTES", "ACCESS_TOKEN_EXPIRE_MINUTES"
+        ),
     )
 
     model_config = SettingsConfigDict(

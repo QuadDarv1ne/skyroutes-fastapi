@@ -3,6 +3,7 @@
 Все эндпоинты требуют JWT-токен пользователя с флагом is_admin=True.
 Все админ-действия логируются в таблицу audit_logs.
 """
+
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
@@ -38,7 +39,9 @@ from app.security import require_admin
 router = APIRouter(prefix="/api/admin", tags=["admin"])
 
 
-async def _log(request: Request, db, user, action, entity_type=None, entity_id=None, details=None):
+async def _log(
+    request: Request, db, user, action, entity_type=None, entity_id=None, details=None
+):
     """Хелпер: записывает действие в аудит-лог."""
     ip = request.client.host if request.client else None
     await log_admin_action(
@@ -76,9 +79,15 @@ async def admin_create_flight(
             detail="origin and destination must differ",
         )
     flight = await create_flight(db, payload)
-    await _log(request, db, user, "create_flight",
-               entity_type="flight", entity_id=flight.id,
-               details=f"Flight {flight.flight_number}")
+    await _log(
+        request,
+        db,
+        user,
+        "create_flight",
+        entity_type="flight",
+        entity_id=flight.id,
+        details=f"Flight {flight.flight_number}",
+    )
     await db.commit()
     # Перечитываем с предзагрузкой связей origin_city/destination_city
     refreshed = await get_flight(db, flight.id)
@@ -100,9 +109,15 @@ async def admin_update_flight(
     flight = await update_flight(db, flight_id, payload)
     if not flight:
         raise HTTPException(status_code=404, detail="Flight not found")
-    await _log(request, db, user, "update_flight",
-               entity_type="flight", entity_id=flight.id,
-               details=f"Updated fields: {list(payload.model_dump(exclude_unset=True).keys())}")
+    await _log(
+        request,
+        db,
+        user,
+        "update_flight",
+        entity_type="flight",
+        entity_id=flight.id,
+        details=f"Updated fields: {list(payload.model_dump(exclude_unset=True).keys())}",
+    )
     await db.commit()
     refreshed = await get_flight(db, flight.id)
     return FlightRead.model_validate(refreshed)
@@ -122,9 +137,15 @@ async def admin_delete_flight(
     ok = await delete_flight(db, flight_id)
     if not ok:
         raise HTTPException(status_code=404, detail="Flight not found")
-    await _log(request, db, user, "delete_flight",
-               entity_type="flight", entity_id=flight_id,
-               details="Flight deactivated")
+    await _log(
+        request,
+        db,
+        user,
+        "delete_flight",
+        entity_type="flight",
+        entity_id=flight_id,
+        details="Flight deactivated",
+    )
     await db.commit()
 
 
@@ -142,9 +163,15 @@ async def admin_create_city(
     user: User = Depends(require_admin),
 ) -> CityRead:
     city = await create_city(db, payload)
-    await _log(request, db, user, "create_city",
-               entity_type="city", entity_id=city.id,
-               details=f"City {city.code} ({city.name})")
+    await _log(
+        request,
+        db,
+        user,
+        "create_city",
+        entity_type="city",
+        entity_id=city.id,
+        details=f"City {city.code} ({city.name})",
+    )
     await db.commit()
     return CityRead.model_validate(city)
 
@@ -220,7 +247,9 @@ async def admin_avg_prices(
     return await get_avg_prices_by_route(db, limit=limit)
 
 
-@router.get("/charts/status-breakdown", summary="Распределение бронирований по статусам")
+@router.get(
+    "/charts/status-breakdown", summary="Распределение бронирований по статусам"
+)
 async def admin_status_breakdown(
     db: AsyncSession = Depends(get_db),
     user: User = Depends(require_admin),

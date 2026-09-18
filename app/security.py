@@ -1,4 +1,5 @@
 """Утилиты безопасности: хеширование паролей, JWT-токены."""
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
@@ -47,7 +48,9 @@ def create_access_token(subject: str | int, extra: dict[str, Any] | None = None)
 def decode_token(token: str) -> dict[str, Any] | None:
     """Декодирование JWT. Возвращает payload или None."""
     try:
-        return jwt.decode(token, settings.secret_key, algorithms=[settings.jwt_algorithm])
+        return jwt.decode(
+            token, settings.secret_key, algorithms=[settings.jwt_algorithm]
+        )
     except jwt.ExpiredSignatureError:
         return None
     except jwt.InvalidTokenError:

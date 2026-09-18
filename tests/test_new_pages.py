@@ -1,4 +1,5 @@
 """Тесты новых страниц: profile, favorites (HTML), search-history (HTML), booking actions."""
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
@@ -46,7 +47,9 @@ async def test_profile_page_requires_auth(client):
 async def test_profile_page_with_auth(client, db_session: AsyncSession):
     """Профиль с логином — 200 и содержит данные пользователя."""
     await create_user(
-        db_session, email="profile@example.com", password="password123",
+        db_session,
+        email="profile@example.com",
+        password="password123",
         full_name="Profile User",
     )
     await db_session.commit()
@@ -80,7 +83,9 @@ async def test_favorites_page_requires_auth(client):
 async def test_favorites_page_with_auth(client, db_session: AsyncSession):
     """Страница избранного с залогиненным пользователем — 200."""
     await create_user(
-        db_session, email="favpage@example.com", password="password123",
+        db_session,
+        email="favpage@example.com",
+        password="password123",
         full_name="Fav Page",
     )
     await db_session.commit()
@@ -110,7 +115,9 @@ async def test_search_history_page_requires_auth(client):
 @pytest.mark.asyncio
 async def test_search_history_page_with_auth(client, db_session: AsyncSession):
     await create_user(
-        db_session, email="sh@example.com", password="password123",
+        db_session,
+        email="sh@example.com",
+        password="password123",
         full_name="SH User",
     )
     await db_session.commit()
@@ -135,7 +142,9 @@ async def test_favorites_add_via_html_form(client, db_session: AsyncSession):
     """Добавление в избранное через HTML-форму."""
     flight_id = await _seed_flight(db_session)
     await create_user(
-        db_session, email="favform@example.com", password="password123",
+        db_session,
+        email="favform@example.com",
+        password="password123",
         full_name="Fav Form",
     )
     await db_session.commit()
@@ -159,7 +168,9 @@ async def test_favorites_add_via_html_form(client, db_session: AsyncSession):
 async def test_favorites_remove_via_html_form(client, db_session: AsyncSession):
     flight_id = await _seed_flight(db_session)
     await create_user(
-        db_session, email="favrm@example.com", password="password123",
+        db_session,
+        email="favrm@example.com",
+        password="password123",
         full_name="Fav Rm",
     )
     await db_session.commit()
@@ -192,7 +203,9 @@ async def test_booking_confirm_action(client, db_session: AsyncSession):
     """Подтверждение бронирования через HTML-форму."""
     flight_id = await _seed_flight(db_session)
     await create_user(
-        db_session, email="conf@example.com", password="password123",
+        db_session,
+        email="conf@example.com",
+        password="password123",
         full_name="Confirm User",
     )
     await db_session.commit()
@@ -205,16 +218,24 @@ async def test_booking_confirm_action(client, db_session: AsyncSession):
     headers = {"Authorization": f"Bearer {token}"}
 
     # Создаём бронирование
-    r = await client.post("/api/bookings", headers=headers, json={
-        "flight_id": flight_id,
-        "contact_email": "conf@example.com",
-        "contact_phone": "+79991234567",
-        "passengers": [{
-            "first_name": "Test", "last_name": "User",
-            "birth_date": "1990-01-01", "passport_number": "12345678",
-            "cabin_class": "economy",
-        }],
-    })
+    r = await client.post(
+        "/api/bookings",
+        headers=headers,
+        json={
+            "flight_id": flight_id,
+            "contact_email": "conf@example.com",
+            "contact_phone": "+79991234567",
+            "passengers": [
+                {
+                    "first_name": "Test",
+                    "last_name": "User",
+                    "birth_date": "1990-01-01",
+                    "passport_number": "12345678",
+                    "cabin_class": "economy",
+                }
+            ],
+        },
+    )
     code = r.json()["code"]
 
     # Подтверждаем через HTML-форму
@@ -235,7 +256,9 @@ async def test_booking_cancel_action(client, db_session: AsyncSession):
     """Отмена бронирования через HTML-форму."""
     flight_id = await _seed_flight(db_session)
     await create_user(
-        db_session, email="cancel@example.com", password="password123",
+        db_session,
+        email="cancel@example.com",
+        password="password123",
         full_name="Cancel User",
     )
     await db_session.commit()
@@ -247,16 +270,24 @@ async def test_booking_cancel_action(client, db_session: AsyncSession):
     token = r.json()["access_token"]
     headers = {"Authorization": f"Bearer {token}"}
 
-    r = await client.post("/api/bookings", headers=headers, json={
-        "flight_id": flight_id,
-        "contact_email": "cancel@example.com",
-        "contact_phone": "+79991234567",
-        "passengers": [{
-            "first_name": "Test", "last_name": "User",
-            "birth_date": "1990-01-01", "passport_number": "12345678",
-            "cabin_class": "economy",
-        }],
-    })
+    r = await client.post(
+        "/api/bookings",
+        headers=headers,
+        json={
+            "flight_id": flight_id,
+            "contact_email": "cancel@example.com",
+            "contact_phone": "+79991234567",
+            "passengers": [
+                {
+                    "first_name": "Test",
+                    "last_name": "User",
+                    "birth_date": "1990-01-01",
+                    "passport_number": "12345678",
+                    "cabin_class": "economy",
+                }
+            ],
+        },
+    )
     code = r.json()["code"]
 
     r = await client.post(

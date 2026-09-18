@@ -1,4 +1,5 @@
 """CRUD-операции с БД."""
+
 from __future__ import annotations
 
 import secrets
@@ -10,8 +11,17 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import aliased, selectinload
 
 from app.models import (
-    City, Flight, Booking, Passenger, User, CabinClass, BookingStatus,
-    Favorite, SearchHistory, PasswordResetToken, AuditLog,
+    City,
+    Flight,
+    Booking,
+    Passenger,
+    User,
+    CabinClass,
+    BookingStatus,
+    Favorite,
+    SearchHistory,
+    PasswordResetToken,
+    AuditLog,
 )
 from app.schemas import BookingCreate
 from app.security import hash_password
@@ -63,13 +73,20 @@ async def get_flights(
         DestCity = aliased(City)
         stmt = stmt.join(
             DestCity,
-            and_(DestCity.id == Flight.destination_id, DestCity.code == destination_code.upper()),
+            and_(
+                DestCity.id == Flight.destination_id,
+                DestCity.code == destination_code.upper(),
+            ),
         )
     if date_from:
-        stmt = stmt.where(Flight.departure_at >= datetime.combine(date_from, datetime.min.time()))
+        stmt = stmt.where(
+            Flight.departure_at >= datetime.combine(date_from, datetime.min.time())
+        )
     if date_to:
         next_day = date_to + timedelta(days=1)
-        stmt = stmt.where(Flight.departure_at < datetime.combine(next_day, datetime.min.time()))
+        stmt = stmt.where(
+            Flight.departure_at < datetime.combine(next_day, datetime.min.time())
+        )
     if max_price is not None:
         stmt = stmt.where(Flight.base_price <= max_price)
     if min_seats:
@@ -245,13 +262,20 @@ async def count_flights_filtered(
         DestCity = aliased(City)
         stmt = stmt.join(
             DestCity,
-            and_(DestCity.id == Flight.destination_id, DestCity.code == destination_code.upper()),
+            and_(
+                DestCity.id == Flight.destination_id,
+                DestCity.code == destination_code.upper(),
+            ),
         )
     if date_from:
-        stmt = stmt.where(Flight.departure_at >= datetime.combine(date_from, datetime.min.time()))
+        stmt = stmt.where(
+            Flight.departure_at >= datetime.combine(date_from, datetime.min.time())
+        )
     if date_to:
         next_day = date_to + timedelta(days=1)
-        stmt = stmt.where(Flight.departure_at < datetime.combine(next_day, datetime.min.time()))
+        stmt = stmt.where(
+            Flight.departure_at < datetime.combine(next_day, datetime.min.time())
+        )
     if max_price is not None:
         stmt = stmt.where(Flight.base_price <= max_price)
     if min_seats:
@@ -357,24 +381,32 @@ async def get_stats(db: AsyncSession) -> dict:
     # Flights
     flights_total = (await db.execute(select(func.count(Flight.id)))).scalar_one()
     flights_active = (
-        await db.execute(select(func.count(Flight.id)).where(Flight.is_active.is_(True)))
+        await db.execute(
+            select(func.count(Flight.id)).where(Flight.is_active.is_(True))
+        )
     ).scalar_one()
 
     # Bookings
     bookings_total = (await db.execute(select(func.count(Booking.id)))).scalar_one()
     bookings_pending = (
         await db.execute(
-            select(func.count(Booking.id)).where(Booking.status == BookingStatus.PENDING)
+            select(func.count(Booking.id)).where(
+                Booking.status == BookingStatus.PENDING
+            )
         )
     ).scalar_one()
     bookings_confirmed = (
         await db.execute(
-            select(func.count(Booking.id)).where(Booking.status == BookingStatus.CONFIRMED)
+            select(func.count(Booking.id)).where(
+                Booking.status == BookingStatus.CONFIRMED
+            )
         )
     ).scalar_one()
     bookings_cancelled = (
         await db.execute(
-            select(func.count(Booking.id)).where(Booking.status == BookingStatus.CANCELLED)
+            select(func.count(Booking.id)).where(
+                Booking.status == BookingStatus.CANCELLED
+            )
         )
     ).scalar_one()
 
@@ -438,8 +470,10 @@ async def get_popular_routes(db: AsyncSession, limit: int = 5) -> list[dict]:
         .join(DestCity, DestCity.id == Flight.destination_id)
         .where(Booking.status != BookingStatus.CANCELLED)
         .group_by(
-            OriginCity.code, OriginCity.name,
-            DestCity.code, DestCity.name,
+            OriginCity.code,
+            OriginCity.name,
+            DestCity.code,
+            DestCity.name,
         )
         .order_by(func.count(Booking.id).desc())
         .limit(limit)
@@ -482,7 +516,9 @@ async def create_city(db: AsyncSession, payload) -> City:
 
 
 # ----- Favorites -----
-async def add_favorite(db: AsyncSession, user_id: int, flight_id: int) -> Favorite | None:
+async def add_favorite(
+    db: AsyncSession, user_id: int, flight_id: int
+) -> Favorite | None:
     """Добавляет рейс в избранное. Возвращает None если уже в избранном или рейс не найден."""
     # Проверяем, существует ли рейс
     flight = await get_flight(db, flight_id)
@@ -588,6 +624,7 @@ async def get_user_search_history(
 async def get_bookings_by_day(db: AsyncSession, days: int = 30) -> list[dict]:
     """Количество бронирований по дням (для графика)."""
     from datetime import datetime, timedelta, timezone
+
     now = datetime.now(timezone.utc).replace(tzinfo=None)
     since = now - timedelta(days=days)
 
@@ -629,8 +666,10 @@ async def get_avg_prices_by_route(db: AsyncSession, limit: int = 10) -> list[dic
         .join(DestCity, DestCity.id == Flight.destination_id)
         .where(Flight.is_active.is_(True))
         .group_by(
-            OriginCity.code, OriginCity.name,
-            DestCity.code, DestCity.name,
+            OriginCity.code,
+            OriginCity.name,
+            DestCity.code,
+            DestCity.name,
         )
         .order_by(func.count(Flight.id).desc())
         .limit(limit)
@@ -641,15 +680,17 @@ async def get_avg_prices_by_route(db: AsyncSession, limit: int = 10) -> list[dic
 
 async def get_bookings_status_breakdown(db: AsyncSession) -> dict:
     """Распределение бронирований по статусам (для pie chart)."""
-    stmt = (
-        select(
-            Booking.status.label("status"),
-            func.count(Booking.id).label("count"),
-        )
-        .group_by(Booking.status)
-    )
+    stmt = select(
+        Booking.status.label("status"),
+        func.count(Booking.id).label("count"),
+    ).group_by(Booking.status)
     result = await db.execute(stmt)
-    return {row.status.value if hasattr(row.status, 'value') else str(row.status): int(row.count) for row in result.all()}
+    return {
+        row.status.value if hasattr(row.status, "value") else str(row.status): int(
+            row.count
+        )
+        for row in result.all()
+    }
 
 
 # ----- Password reset -----
@@ -657,6 +698,7 @@ async def create_password_reset_token(db: AsyncSession, user: User) -> str:
     """Создаёт токен сброса пароля для пользователя (валиден 1 час)."""
     import secrets as _secrets
     from datetime import timedelta
+
     token = _secrets.token_urlsafe(32)
     reset = PasswordResetToken(
         user_id=user.id,
@@ -682,7 +724,9 @@ async def verify_password_reset_token(db: AsyncSession, token: str) -> User | No
     return user
 
 
-async def use_password_reset_token(db: AsyncSession, token: str, new_password: str) -> bool:
+async def use_password_reset_token(
+    db: AsyncSession, token: str, new_password: str
+) -> bool:
     """Использует токен и меняет пароль пользователя."""
     result = await db.execute(
         select(PasswordResetToken).where(PasswordResetToken.token == token)
@@ -729,10 +773,6 @@ async def log_admin_action(
 
 async def get_audit_logs(db: AsyncSession, limit: int = 50) -> list[AuditLog]:
     """Возвращает последние записи аудита."""
-    stmt = (
-        select(AuditLog)
-        .order_by(AuditLog.created_at.desc())
-        .limit(limit)
-    )
+    stmt = select(AuditLog).order_by(AuditLog.created_at.desc()).limit(limit)
     result = await db.execute(stmt)
     return list(result.scalars().all())

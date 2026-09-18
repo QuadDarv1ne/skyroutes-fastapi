@@ -1,4 +1,5 @@
 """Тесты метрик, rate limiting и истории поиска."""
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
@@ -47,27 +48,32 @@ async def test_search_history_saved_after_search(client, db_session: AsyncSessio
     db_session.add_all([origin, dest])
     await db_session.flush()
     now = datetime.now(timezone.utc).replace(tzinfo=None)
-    db_session.add(Flight(
-        flight_number="SH01",
-        airline="Test Air",
-        aircraft="A320",
-        origin_id=origin.id,
-        destination_id=dest.id,
-        departure_at=now + timedelta(days=1),
-        arrival_at=now + timedelta(days=1, hours=3),
-        duration_minutes=180,
-        base_price=5000.0,
-        seats_total=180,
-        seats_available=180,
-    ))
+    db_session.add(
+        Flight(
+            flight_number="SH01",
+            airline="Test Air",
+            aircraft="A320",
+            origin_id=origin.id,
+            destination_id=dest.id,
+            departure_at=now + timedelta(days=1),
+            arrival_at=now + timedelta(days=1, hours=3),
+            duration_minutes=180,
+            base_price=5000.0,
+            seats_total=180,
+            seats_available=180,
+        )
+    )
     await db_session.commit()
 
     # Регистрируемся и логинимся
-    r = await client.post("/api/auth/register", json={
-        "email": "search@example.com",
-        "password": "password123",
-        "full_name": "Searcher",
-    })
+    r = await client.post(
+        "/api/auth/register",
+        json={
+            "email": "search@example.com",
+            "password": "password123",
+            "full_name": "Searcher",
+        },
+    )
     token = r.json()["access_token"]
     headers = {"Authorization": f"Bearer {token}"}
 
@@ -89,13 +95,18 @@ async def test_search_history_saved_after_search(client, db_session: AsyncSessio
 
 
 @pytest.mark.asyncio
-async def test_search_history_not_saved_without_filters(client, db_session: AsyncSession):
+async def test_search_history_not_saved_without_filters(
+    client, db_session: AsyncSession
+):
     """Поиск без фильтров не должен сохраняться в истории."""
-    r = await client.post("/api/auth/register", json={
-        "email": "no-filters@example.com",
-        "password": "password123",
-        "full_name": "No Filters",
-    })
+    r = await client.post(
+        "/api/auth/register",
+        json={
+            "email": "no-filters@example.com",
+            "password": "password123",
+            "full_name": "No Filters",
+        },
+    )
     token = r.json()["access_token"]
     headers = {"Authorization": f"Bearer {token}"}
 
@@ -118,19 +129,21 @@ async def test_x_total_count_header(client, db_session: AsyncSession):
     await db_session.flush()
     now = datetime.now(timezone.utc).replace(tzinfo=None)
     for i in range(3):
-        db_session.add(Flight(
-            flight_number=f"TC{i:03d}",
-            airline="Test",
-            aircraft="A320",
-            origin_id=origin.id,
-            destination_id=dest.id,
-            departure_at=now + timedelta(hours=i),
-            arrival_at=now + timedelta(hours=i + 2),
-            duration_minutes=120,
-            base_price=5000.0 + i * 1000,
-            seats_total=180,
-            seats_available=180,
-        ))
+        db_session.add(
+            Flight(
+                flight_number=f"TC{i:03d}",
+                airline="Test",
+                aircraft="A320",
+                origin_id=origin.id,
+                destination_id=dest.id,
+                departure_at=now + timedelta(hours=i),
+                arrival_at=now + timedelta(hours=i + 2),
+                duration_minutes=120,
+                base_price=5000.0 + i * 1000,
+                seats_total=180,
+                seats_available=180,
+            )
+        )
     await db_session.commit()
 
     r = await client.get("/api/flights", params={"limit": 2})

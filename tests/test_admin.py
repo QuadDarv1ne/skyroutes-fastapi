@@ -1,4 +1,5 @@
 """Тесты админ-API и статистики."""
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
@@ -36,11 +37,14 @@ async def _admin_token(client, db: AsyncSession) -> dict:
 
 
 async def _regular_token(client) -> dict:
-    r = await client.post("/api/auth/register", json={
-        "email": "user@example.com",
-        "password": "usersecret",
-        "full_name": "Regular User",
-    })
+    r = await client.post(
+        "/api/auth/register",
+        json={
+            "email": "user@example.com",
+            "password": "usersecret",
+            "full_name": "Regular User",
+        },
+    )
     token = r.json()["access_token"]
     return {"Authorization": f"Bearer {token}"}
 
@@ -104,17 +108,21 @@ async def test_admin_create_flight(client, db_session: AsyncSession):
 
     headers = await _admin_token(client, db_session)
     now = datetime.now(timezone.utc).replace(tzinfo=None)
-    r = await client.post("/api/admin/flights", headers=headers, json={
-        "flight_number": "SU9999",
-        "airline": "Аэрофлот",
-        "aircraft": "Airbus A350",
-        "origin_id": origin.id,
-        "destination_id": dest.id,
-        "departure_at": (now + timedelta(days=2)).isoformat(),
-        "arrival_at": (now + timedelta(days=2, hours=3)).isoformat(),
-        "base_price": 25000.0,
-        "seats_total": 250,
-    })
+    r = await client.post(
+        "/api/admin/flights",
+        headers=headers,
+        json={
+            "flight_number": "SU9999",
+            "airline": "Аэрофлот",
+            "aircraft": "Airbus A350",
+            "origin_id": origin.id,
+            "destination_id": dest.id,
+            "departure_at": (now + timedelta(days=2)).isoformat(),
+            "arrival_at": (now + timedelta(days=2, hours=3)).isoformat(),
+            "base_price": 25000.0,
+            "seats_total": 250,
+        },
+    )
     assert r.status_code == 201, r.text
     data = r.json()
     assert data["flight_number"] == "SU9999"
@@ -127,17 +135,21 @@ async def test_admin_create_flight_validation(client, db_session: AsyncSession):
     headers = await _admin_token(client, db_session)
     now = datetime.now(timezone.utc).replace(tzinfo=None)
     # arrival before departure — должна пройти Pydantic-валидацию, но дать 400
-    r = await client.post("/api/admin/flights", headers=headers, json={
-        "flight_number": "BAD1",
-        "airline": "Test Airline",
-        "aircraft": "A320",
-        "origin_id": 1,
-        "destination_id": 2,
-        "departure_at": (now + timedelta(days=2)).isoformat(),
-        "arrival_at": (now + timedelta(days=1)).isoformat(),
-        "base_price": 1000.0,
-        "seats_total": 100,
-    })
+    r = await client.post(
+        "/api/admin/flights",
+        headers=headers,
+        json={
+            "flight_number": "BAD1",
+            "airline": "Test Airline",
+            "aircraft": "A320",
+            "origin_id": 1,
+            "destination_id": 2,
+            "departure_at": (now + timedelta(days=2)).isoformat(),
+            "arrival_at": (now + timedelta(days=1)).isoformat(),
+            "base_price": 1000.0,
+            "seats_total": 100,
+        },
+    )
     assert r.status_code == 400
 
 
@@ -168,11 +180,15 @@ async def test_admin_delete_flight(client, db_session: AsyncSession):
 @pytest.mark.asyncio
 async def test_admin_create_city(client, db_session: AsyncSession):
     headers = await _admin_token(client, db_session)
-    r = await client.post("/api/admin/cities", headers=headers, json={
-        "code": "KRR",
-        "name": "Краснодар",
-        "country": "Россия",
-    })
+    r = await client.post(
+        "/api/admin/cities",
+        headers=headers,
+        json={
+            "code": "KRR",
+            "name": "Краснодар",
+            "country": "Россия",
+        },
+    )
     assert r.status_code == 201, r.text
     assert r.json()["code"] == "KRR"
 

@@ -1,4 +1,5 @@
 """API рейсов: список, поиск, детали + пагинация, сортировка, X-Total-Count."""
+
 from __future__ import annotations
 
 from datetime import date
@@ -98,7 +99,9 @@ async def list_flights(
 
 
 @router.get("/{flight_id}", response_model=FlightRead, summary="Детали рейса")
-async def flight_detail(flight_id: int, db: AsyncSession = Depends(get_db)) -> FlightRead:
+async def flight_detail(
+    flight_id: int, db: AsyncSession = Depends(get_db)
+) -> FlightRead:
     flight = await get_flight(db, flight_id)
     if not flight:
         raise HTTPException(status_code=404, detail="Flight not found")

@@ -1,4 +1,5 @@
 """Тесты аналитических эндпоинтов админ-API (для графиков)."""
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
@@ -51,19 +52,21 @@ async def test_charts_avg_prices_with_flights(client, db_session: AsyncSession):
     await db_session.flush()
     now = datetime.now(timezone.utc).replace(tzinfo=None)
     for i in range(3):
-        db_session.add(Flight(
-            flight_number=f"AP{i:03d}",
-            airline="Test Air",
-            aircraft="A320",
-            origin_id=origin.id,
-            destination_id=dest.id,
-            departure_at=now + timedelta(days=i + 1),
-            arrival_at=now + timedelta(days=i + 1, hours=2),
-            duration_minutes=120,
-            base_price=5000.0 + i * 1000,
-            seats_total=180,
-            seats_available=180,
-        ))
+        db_session.add(
+            Flight(
+                flight_number=f"AP{i:03d}",
+                airline="Test Air",
+                aircraft="A320",
+                origin_id=origin.id,
+                destination_id=dest.id,
+                departure_at=now + timedelta(days=i + 1),
+                arrival_at=now + timedelta(days=i + 1, hours=2),
+                duration_minutes=120,
+                base_price=5000.0 + i * 1000,
+                seats_total=180,
+                seats_available=180,
+            )
+        )
     await db_session.commit()
 
     headers = await _admin_token(client, db_session)
@@ -115,35 +118,55 @@ async def test_charts_status_breakdown_with_bookings(client, db_session: AsyncSe
     headers = await _admin_token(client, db_session)
 
     # Создаём бронирования разных статусов
-    r = await client.post("/api/bookings", headers=headers, json={
-        "flight_id": flight.id,
-        "contact_email": "sb1@example.com",
-        "contact_phone": "+79991234567",
-        "passengers": [{
-            "first_name": "A", "last_name": "B",
-            "birth_date": "1990-01-01", "passport_number": "12345678",
-            "cabin_class": "economy",
-        }],
-    })
+    r = await client.post(
+        "/api/bookings",
+        headers=headers,
+        json={
+            "flight_id": flight.id,
+            "contact_email": "sb1@example.com",
+            "contact_phone": "+79991234567",
+            "passengers": [
+                {
+                    "first_name": "A",
+                    "last_name": "B",
+                    "birth_date": "1990-01-01",
+                    "passport_number": "12345678",
+                    "cabin_class": "economy",
+                }
+            ],
+        },
+    )
     assert r.status_code == 201
     code1 = r.json()["code"]
 
-    r = await client.post("/api/bookings", headers=headers, json={
-        "flight_id": flight.id,
-        "contact_email": "sb2@example.com",
-        "contact_phone": "+79991234567",
-        "passengers": [{
-            "first_name": "C", "last_name": "D",
-            "birth_date": "1990-01-01", "passport_number": "12345678",
-            "cabin_class": "economy",
-        }],
-    })
+    r = await client.post(
+        "/api/bookings",
+        headers=headers,
+        json={
+            "flight_id": flight.id,
+            "contact_email": "sb2@example.com",
+            "contact_phone": "+79991234567",
+            "passengers": [
+                {
+                    "first_name": "C",
+                    "last_name": "D",
+                    "birth_date": "1990-01-01",
+                    "passport_number": "12345678",
+                    "cabin_class": "economy",
+                }
+            ],
+        },
+    )
     code2 = r.json()["code"]
 
     # Первую подтверждаем
-    await client.patch(f"/api/bookings/{code1}", headers=headers, json={"status": "confirmed"})
+    await client.patch(
+        f"/api/bookings/{code1}", headers=headers, json={"status": "confirmed"}
+    )
     # Вторую отменяем
-    await client.patch(f"/api/bookings/{code2}", headers=headers, json={"status": "cancelled"})
+    await client.patch(
+        f"/api/bookings/{code2}", headers=headers, json={"status": "cancelled"}
+    )
 
     r = await client.get("/api/admin/charts/status-breakdown", headers=headers)
     assert r.status_code == 200
@@ -155,11 +178,14 @@ async def test_charts_status_breakdown_with_bookings(client, db_session: AsyncSe
 @pytest.mark.asyncio
 async def test_charts_endpoints_require_admin(client, db_session: AsyncSession):
     """Обычный пользователь не может получить аналитику."""
-    r = await client.post("/api/auth/register", json={
-        "email": "regular@example.com",
-        "password": "password123",
-        "full_name": "Regular User",
-    })
+    r = await client.post(
+        "/api/auth/register",
+        json={
+            "email": "regular@example.com",
+            "password": "password123",
+            "full_name": "Regular User",
+        },
+    )
     token = r.json()["access_token"]
     headers = {"Authorization": f"Bearer {token}"}
 

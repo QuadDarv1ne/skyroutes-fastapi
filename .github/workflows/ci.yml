@@ -28,10 +28,10 @@ jobs:
           pip install -r requirements.txt
 
       - name: Lint with ruff
-        run: ruff check app/ tests/ scripts/ || true
+        run: ruff check app/ tests/ scripts/
 
       - name: Check formatting with black
-        run: black --check app/ tests/ scripts/ || true
+        run: black --check app/ tests/ scripts/
 
       - name: Run pytest
         env:

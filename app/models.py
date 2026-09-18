@@ -1,12 +1,21 @@
 """ORM-модели: рейсы, города, бронирования, пассажиры, пользователи, избранное, история поиска."""
+
 from __future__ import annotations
 
 from datetime import datetime, date, timezone
 from enum import Enum as PyEnum
 
 from sqlalchemy import (
-    String, Integer, Float, DateTime, Date, ForeignKey, Enum, Boolean,
-    UniqueConstraint, Index,
+    String,
+    Integer,
+    Float,
+    DateTime,
+    Date,
+    ForeignKey,
+    Enum,
+    Boolean,
+    UniqueConstraint,
+    Index,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -19,6 +28,7 @@ def _utcnow() -> datetime:
 
 class CabinClass(str, PyEnum):
     """Класс обслуживания."""
+
     ECONOMY = "economy"
     PREMIUM = "premium"
     BUSINESS = "business"
@@ -27,6 +37,7 @@ class CabinClass(str, PyEnum):
 
 class BookingStatus(str, PyEnum):
     """Статус бронирования."""
+
     PENDING = "pending"
     CONFIRMED = "confirmed"
     CANCELLED = "cancelled"
@@ -34,10 +45,13 @@ class BookingStatus(str, PyEnum):
 
 class City(Base):
     """Город с аэропортом."""
+
     __tablename__ = "cities"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    code: Mapped[str] = mapped_column(String(3), unique=True, index=True)  # IATA: SVO, DME, LED...
+    code: Mapped[str] = mapped_column(
+        String(3), unique=True, index=True
+    )  # IATA: SVO, DME, LED...
     name: Mapped[str] = mapped_column(String(128))
     country: Mapped[str] = mapped_column(String(128))
     timezone: Mapped[str] = mapped_column(String(64), default="Europe/Moscow")
@@ -55,6 +69,7 @@ class City(Base):
 
 class Flight(Base):
     """Рейс между городами."""
+
     __tablename__ = "flights"
     __table_args__ = (
         # Составной индекс для поиска по маршруту + дате
@@ -100,6 +115,7 @@ class Flight(Base):
 
 class User(Base):
     """Зарегистрированный пользователь (для JWT-аутентификации)."""
+
     __tablename__ = "users"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
@@ -123,21 +139,27 @@ class User(Base):
 
 class Passenger(Base):
     """Пассажир бронирования."""
+
     __tablename__ = "passengers"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    booking_id: Mapped[int] = mapped_column(ForeignKey("bookings.id", ondelete="CASCADE"))
+    booking_id: Mapped[int] = mapped_column(
+        ForeignKey("bookings.id", ondelete="CASCADE")
+    )
     first_name: Mapped[str] = mapped_column(String(64))
     last_name: Mapped[str] = mapped_column(String(64))
     birth_date: Mapped[date] = mapped_column(Date)
     passport_number: Mapped[str] = mapped_column(String(32))
-    cabin_class: Mapped[CabinClass] = mapped_column(Enum(CabinClass), default=CabinClass.ECONOMY)
+    cabin_class: Mapped[CabinClass] = mapped_column(
+        Enum(CabinClass), default=CabinClass.ECONOMY
+    )
 
     booking: Mapped["Booking"] = relationship(back_populates="passengers")
 
 
 class Booking(Base):
     """Бронирование рейса."""
+
     __tablename__ = "bookings"
     __table_args__ = (
         Index("ix_bookings_user_created", "user_id", "created_at"),
@@ -172,10 +194,9 @@ class Booking(Base):
 
 class Favorite(Base):
     """Избранный рейс пользователя."""
+
     __tablename__ = "favorites"
-    __table_args__ = (
-        UniqueConstraint("user_id", "flight_id", name="uq_user_flight"),
-    )
+    __table_args__ = (UniqueConstraint("user_id", "flight_id", name="uq_user_flight"),)
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
@@ -191,10 +212,9 @@ class Favorite(Base):
 
 class SearchHistory(Base):
     """История поисковых запросов пользователя (для персонализации)."""
+
     __tablename__ = "search_history"
-    __table_args__ = (
-        Index("ix_search_history_user_created", "user_id", "created_at"),
-    )
+    __table_args__ = (Index("ix_search_history_user_created", "user_id", "created_at"),)
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     user_id: Mapped[int | None] = mapped_column(
@@ -216,10 +236,9 @@ class SearchHistory(Base):
 
 class PasswordResetToken(Base):
     """Токен для сброса пароля (отправляется на email пользователя)."""
+
     __tablename__ = "password_reset_tokens"
-    __table_args__ = (
-        Index("ix_reset_tokens_user", "user_id"),
-    )
+    __table_args__ = (Index("ix_reset_tokens_user", "user_id"),)
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
@@ -236,6 +255,7 @@ class PasswordResetToken(Base):
 
 class AuditLog(Base):
     """Аудит-лог действий администраторов."""
+
     __tablename__ = "audit_logs"
     __table_args__ = (
         Index("ix_audit_user_created", "user_id", "created_at"),

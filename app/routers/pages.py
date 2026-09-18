@@ -1,4 +1,5 @@
 """HTML-страницы (Jinja2): главная, поиск, бронирование, авторизация, профиль, избранное, история, about/contacts/admin."""
+
 from __future__ import annotations
 
 from datetime import date
@@ -118,24 +119,30 @@ async def flights_page(
     )
     cities = await get_cities(db)
     ctx = await base_context(request, db)
-    ctx.update({
-        "flights": flights,
-        "cities": cities,
-        "filters": {
-            "origin": origin or "",
-            "destination": destination or "",
-            "date_from": date_from.isoformat() if date_from else "",
-            "date_to": date_to.isoformat() if date_to else "",
-            "max_price": max_price or "",
-            "sort_by": sort_by,
-            "sort_order": sort_order,
-        },
-    })
+    ctx.update(
+        {
+            "flights": flights,
+            "cities": cities,
+            "filters": {
+                "origin": origin or "",
+                "destination": destination or "",
+                "date_from": date_from.isoformat() if date_from else "",
+                "date_to": date_to.isoformat() if date_to else "",
+                "max_price": max_price or "",
+                "sort_by": sort_by,
+                "sort_order": sort_order,
+            },
+        }
+    )
     return templates.TemplateResponse(request, "flights.html", ctx)
 
 
-@router.get("/booking/{flight_id}", response_class=HTMLResponse, summary="Форма бронирования")
-async def booking_form(request: Request, flight_id: int, db: AsyncSession = Depends(get_db)):
+@router.get(
+    "/booking/{flight_id}", response_class=HTMLResponse, summary="Форма бронирования"
+)
+async def booking_form(
+    request: Request, flight_id: int, db: AsyncSession = Depends(get_db)
+):
     flight = await get_flight(db, flight_id)
     if not flight:
         raise HTTPException(status_code=404, detail="Flight not found")
@@ -189,7 +196,9 @@ async def booking_submit(
     return RedirectResponse(url=f"/booking/{booking.code}/view", status_code=303)
 
 
-@router.get("/booking/{code}/view", response_class=HTMLResponse, summary="Просмотр бронирования")
+@router.get(
+    "/booking/{code}/view", response_class=HTMLResponse, summary="Просмотр бронирования"
+)
 async def booking_view(request: Request, code: str, db: AsyncSession = Depends(get_db)):
     booking = await get_booking_by_code(db, code)
     if not booking:
@@ -234,7 +243,9 @@ async def login_submit(
     user = await get_user_by_email(db, email)
     if not user or not verify_password(password, user.password_hash):
         raise HTTPException(status_code=401, detail="Invalid credentials")
-    token = create_access_token(user.id, extra={"email": user.email, "admin": user.is_admin})
+    token = create_access_token(
+        user.id, extra={"email": user.email, "admin": user.is_admin}
+    )
     response = RedirectResponse(url="/", status_code=303)
     return set_auth_cookie(response, token)
 
@@ -258,7 +269,9 @@ async def register_submit(
         raise HTTPException(status_code=409, detail="Email already registered")
     user = await create_user(db, email, password, full_name)
     await db.commit()
-    token = create_access_token(user.id, extra={"email": user.email, "admin": user.is_admin})
+    token = create_access_token(
+        user.id, extra={"email": user.email, "admin": user.is_admin}
+    )
     response = RedirectResponse(url="/", status_code=303)
     return set_auth_cookie(response, token)
 
@@ -301,15 +314,17 @@ async def admin_dashboard(request: Request, db: AsyncSession = Depends(get_db)):
     status_breakdown = await get_bookings_status_breakdown(db)
 
     ctx = await base_context(request, db)
-    ctx.update({
-        "stats": stats,
-        "popular_routes": popular,
-        "top_airlines": airlines,
-        "cities": cities,
-        "bookings_by_day": bookings_by_day,
-        "avg_prices": avg_prices,
-        "status_breakdown": status_breakdown,
-    })
+    ctx.update(
+        {
+            "stats": stats,
+            "popular_routes": popular,
+            "top_airlines": airlines,
+            "cities": cities,
+            "bookings_by_day": bookings_by_day,
+            "avg_prices": avg_prices,
+            "status_breakdown": status_breakdown,
+        }
+    )
     return templates.TemplateResponse(request, "admin.html", ctx)
 
 
@@ -331,13 +346,15 @@ async def profile_page(request: Request, db: AsyncSession = Depends(get_db)):
     cancelled_bookings = [b for b in bookings if b.status == BookingStatus.CANCELLED]
 
     ctx = await base_context(request, db)
-    ctx.update({
-        "user_bookings": bookings,
-        "favorites_count": len(favorites),
-        "total_spent": total_spent,
-        "active_bookings_count": len(active_bookings),
-        "cancelled_bookings_count": len(cancelled_bookings),
-    })
+    ctx.update(
+        {
+            "user_bookings": bookings,
+            "favorites_count": len(favorites),
+            "total_spent": total_spent,
+            "active_bookings_count": len(active_bookings),
+            "cancelled_bookings_count": len(cancelled_bookings),
+        }
+    )
     return templates.TemplateResponse(request, "profile.html", ctx)
 
 
