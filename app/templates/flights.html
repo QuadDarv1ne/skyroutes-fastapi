@@ -85,8 +85,8 @@
             <div class="flight-actions">
                 <a href="/booking/{{ f.id }}" class="btn btn-primary btn-sm">Выбрать</a>
                 {% if current_user %}
-                <form method="post" action="/favorites/{{ f.id }}/add" style="display:inline;">
-                    <button type="submit" class="btn btn-ghost btn-sm" title="Добавить в избранное">♥</button>
+                <form method="post" action="/favorites/{{ f.id }}/add" style="display:contents;">
+                    <button type="submit" class="btn btn-ghost btn-sm btn-icon" title="Добавить в избранное" aria-label="Добавить в избранное">♥</button>
                 </form>
                 {% endif %}
             </div>

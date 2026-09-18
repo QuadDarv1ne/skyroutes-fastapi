@@ -102,6 +102,35 @@ function showToast(message, type = 'info', timeout = 3000) {
     });
 })();
 
+// ---------- Мобильное меню (бургер) ----------
+(function () {
+    const toggle = document.getElementById('navToggle');
+    const nav = document.getElementById('headerNav');
+    if (!toggle || !nav) return;
+
+    toggle.addEventListener('click', () => {
+        const open = document.body.classList.toggle('nav-open');
+        toggle.setAttribute('aria-expanded', String(open));
+        toggle.setAttribute('aria-label', open ? 'Закрыть меню' : 'Открыть меню');
+    });
+
+    // Закрываем меню при клике по ссылке (на мобильных)
+    nav.addEventListener('click', (e) => {
+        if (e.target.closest('a') && document.body.classList.contains('nav-open')) {
+            document.body.classList.remove('nav-open');
+            toggle.setAttribute('aria-expanded', 'false');
+        }
+    });
+
+    // Закрываем меню при переходе на десктопную ширину
+    window.matchMedia('(min-width: 861px)').addEventListener('change', (e) => {
+        if (e.matches) {
+            document.body.classList.remove('nav-open');
+            toggle.setAttribute('aria-expanded', 'false');
+        }
+    });
+})();
+
 // ---------- Переключение темы ----------
 (function () {
     const toggle = document.getElementById('themeToggle');

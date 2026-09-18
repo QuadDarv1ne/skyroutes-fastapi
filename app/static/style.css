@@ -76,12 +76,14 @@
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
+html { overflow-x: clip; }
 body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     color: var(--text);
     background: var(--bg);
     line-height: 1.55;
     -webkit-font-smoothing: antialiased;
+    overflow-x: clip;
 }
 
 .container {
@@ -96,13 +98,16 @@ body {
     border-bottom: 1px solid var(--border);
     position: sticky;
     top: 0;
-    z-index: 10;
+    z-index: 100;
+    box-shadow: 0 1px 0 rgba(15, 30, 75, 0.02);
 }
 .header-inner {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 18px 24px;
+    gap: 16px;
+    padding: 14px 24px;
+    min-height: 64px;
 }
 .logo {
     display: flex;
@@ -112,6 +117,8 @@ body {
     color: var(--text);
     font-weight: 800;
     font-size: 20px;
+    flex-shrink: 0;
+    white-space: nowrap;
 }
 .logo-mark {
     background: linear-gradient(135deg, var(--primary), var(--accent));
@@ -123,15 +130,58 @@ body {
     align-items: center;
     justify-content: center;
     font-size: 18px;
+    flex-shrink: 0;
 }
-.main-nav { display: flex; gap: 28px; }
+.header-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex: 1;
+    min-width: 0;
+    gap: 20px;
+}
+.main-nav {
+    display: flex;
+    align-items: center;
+    gap: 22px;
+    flex-wrap: wrap;
+    min-width: 0;
+}
 .main-nav a {
     color: var(--text-soft);
     text-decoration: none;
     font-weight: 500;
+    white-space: nowrap;
     transition: color .2s;
 }
 .main-nav a:hover { color: var(--primary); }
+
+/* Бургер-кнопка (видна только на мобильных) */
+.nav-toggle {
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    gap: 5px;
+    width: 40px;
+    height: 40px;
+    padding: 8px;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    flex-shrink: 0;
+}
+.nav-toggle span {
+    display: block;
+    height: 2px;
+    width: 100%;
+    border-radius: 2px;
+    background: var(--text);
+    transition: transform .2s, opacity .2s;
+}
+.nav-open .nav-toggle span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+.nav-open .nav-toggle span:nth-child(2) { opacity: 0; }
+.nav-open .nav-toggle span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
 
 /* === Hero === */
 .hero {
@@ -211,7 +261,10 @@ input:focus, select:focus {
     display: flex;
     gap: 10px;
     justify-content: flex-end;
+    align-items: flex-end;
+    flex-wrap: wrap;
 }
+.filter-actions .btn { margin-bottom: 2px; }
 
 /* === Buttons === */
 .btn {
@@ -226,7 +279,19 @@ input:focus, select:focus {
     text-decoration: none;
     border: 1px solid transparent;
     cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
     transition: all .15s;
+}
+.btn:active { transform: scale(0.97); }
+.btn:focus-visible,
+input:focus-visible,
+select:focus-visible,
+.main-nav a:focus-visible,
+.auth-nav a:focus-visible,
+.theme-toggle:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
 }
 .btn-primary {
     background: var(--primary);
@@ -238,7 +303,7 @@ input:focus, select:focus {
     border-color: var(--border);
     color: var(--text-soft);
 }
-.btn-ghost:hover { color: var(--text); border-color: var(--text-soft); }
+.btn-ghost:hover { color: var(--text); border-color: var(--text-soft); background: var(--bg); }
 .btn-block { width: 100%; }
 .btn-link {
     background: none;
@@ -248,6 +313,17 @@ input:focus, select:focus {
     font-size: 13px;
     padding: 4px 0;
     text-decoration: underline;
+}
+.btn-sm {
+    padding: 7px 12px;
+    font-size: 13px;
+}
+/* Иконочные кнопки (♥ в карточках рейсов) */
+.btn-icon {
+    width: 36px;
+    padding: 7px 0;
+    font-size: 15px;
+    line-height: 1;
 }
 
 /* === Features === */
@@ -362,6 +438,7 @@ input:focus, select:focus {
     align-items: flex-end;
     gap: 4px;
     min-width: 160px;
+    flex-shrink: 0;
 }
 .flight-date { font-size: 13px; color: var(--text-soft); }
 .flight-seats { font-size: 13px; color: var(--text-soft); }
@@ -545,23 +622,80 @@ input:focus, select:focus {
 }
 
 /* === Responsive === */
+@media (max-width: 1024px) {
+    .main-nav { gap: 16px; }
+    .header-nav { gap: 12px; }
+}
 @media (max-width: 900px) {
     .search-grid { grid-template-columns: repeat(2, 1fr); }
     .features { grid-template-columns: 1fr; }
     .flight-card { flex-direction: column; align-items: stretch; }
-    .flight-meta { align-items: flex-start; flex-direction: row; flex-wrap: wrap; gap: 12px; }
+    .flight-meta {
+        align-items: flex-start;
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 10px 16px;
+        justify-content: space-between;
+        min-width: 0;
+    }
+    .flight-actions { margin-top: 0; margin-left: auto; }
     .booking-grid { grid-template-columns: 1fr; }
     .hero-content h1 { font-size: 32px; }
 }
+@media (max-width: 860px) {
+    /* Мобильная шапка: бургер вместо полной навигации */
+    .nav-toggle {
+        display: flex;
+        order: 3;
+    }
+    .header-nav {
+        display: none;
+        order: 4;
+        flex-basis: 100%;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+        padding: 12px 0 16px;
+        border-top: 1px solid var(--border);
+    }
+    .nav-open .header-nav { display: flex; }
+    .main-nav {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+        width: 100%;
+    }
+    .main-nav a {
+        display: block;
+        width: 100%;
+        padding: 8px 10px;
+        border-radius: var(--radius-sm);
+    }
+    .main-nav a:hover,
+    .main-nav a.active {
+        background: var(--bg);
+        border-bottom: none;
+        padding-bottom: 8px;
+    }
+    .auth-nav {
+        width: 100%;
+        justify-content: flex-start;
+        flex-wrap: wrap;
+        padding-top: 8px;
+        border-top: 1px solid var(--border);
+    }
+    .user-name { padding-left: 4px; }
+}
 @media (max-width: 600px) {
     .search-grid { grid-template-columns: 1fr; }
-    .main-nav { gap: 14px; }
     .hero-content h1 { font-size: 26px; }
     .hero-subtitle { font-size: 15px; }
     .passenger-grid { grid-template-columns: 1fr; }
-    .header-inner { flex-wrap: wrap; gap: 12px; }
-    .auth-nav { order: 3; width: 100%; justify-content: flex-end; }
-    .main-nav { flex-wrap: wrap; }
+    .filter-actions { justify-content: stretch; }
+    .filter-actions .btn { flex: 1; }
+    .flight-meta { gap: 8px 12px; }
+    .flight-actions { width: 100%; justify-content: flex-start; }
+    .toast { left: 16px; right: 16px; max-width: none; bottom: 16px; }
 }
 
 /* === Auth pages === */
@@ -611,10 +745,6 @@ input:focus, select:focus {
     color: var(--text);
     font-weight: 600;
     font-size: 14px;
-}
-.btn-sm {
-    padding: 7px 12px;
-    font-size: 13px;
 }
 
 /* === Booking list === */
@@ -926,7 +1056,6 @@ input:focus, select:focus {
 }
 @media (max-width: 600px) {
     .stats-grid { grid-template-columns: 1fr; }
-    .main-nav { gap: 10px; font-size: 14px; }
 }
 
 /* === Сортировка и результаты === */
@@ -996,8 +1125,10 @@ input:focus, select:focus {
 /* === Flight actions === */
 .flight-actions {
     display: flex;
-    gap: 6px;
-    margin-top: 4px;
+    gap: 8px;
+    margin-top: 8px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
 }
 
 /* === Links in stat-sub === */

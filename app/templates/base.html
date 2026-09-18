@@ -28,7 +28,11 @@
             <span class="logo-mark">✈</span>
             <span class="logo-text">SkyRoutes</span>
         </a>
-        <nav class="main-nav">
+        <button id="navToggle" class="nav-toggle" aria-label="Открыть меню" aria-expanded="false" aria-controls="headerNav">
+            <span></span><span></span><span></span>
+        </button>
+        <div class="header-nav" id="headerNav">
+            <nav class="main-nav" aria-label="Основная навигация">
             <a href="/">Главная</a>
             <a href="/flights">Поиск рейсов</a>
             {% if current_user %}
@@ -43,8 +47,8 @@
             <a href="/admin" class="admin-link">Админка</a>
             {% endif %}
             <a href="/docs" target="_blank">API</a>
-        </nav>
-        <div class="auth-nav">
+            </nav>
+            <div class="auth-nav">
             <button id="themeToggle" class="theme-toggle" aria-label="Переключить тему" title="Светлая/тёмная тема">
                 <span class="theme-icon-light">☀</span>
                 <span class="theme-icon-dark">☾</span>
@@ -56,6 +60,7 @@
             <a href="/login" class="btn btn-ghost btn-sm">Войти</a>
             <a href="/register" class="btn btn-primary btn-sm">Регистрация</a>
             {% endif %}
+        </div>
         </div>
     </div>
 </header>
